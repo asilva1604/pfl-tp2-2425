@@ -22,7 +22,7 @@ create_row(Size, Row) :-
 % Displays the current game state: the board and the current player.
 display_game(state(Board, Player)) :-
     write('Current player: '), writeln(Player),
-    write('  1 2 3 4 5 6 7'), nl, % Column headers
+    write('  1   2   3   4   5   6   7  '), nl, % Column headers
     display_rows(Board, 1).
 
 % Helper predicate to display rows with row numbers.
@@ -41,12 +41,20 @@ display_row([Cell | Rest]) :-
     display_row(Rest).
 
 % Maps cell values to display symbols.
-symbol_for_cell(empty, '.').
-symbol_for_cell(white, 'W').
-symbol_for_cell(black, 'B').
-symbol_for_cell(white_stack, 'WW').
-symbol_for_cell(black_stack, 'BB').
+symbol_for_cell(empty, '.  ').
+symbol_for_cell(white, 'W  ').
+symbol_for_cell(black, 'B  ').
+symbol_for_cell(white_stack, 'WW ').
+symbol_for_cell(black_stack, 'BB ').
 
 writeln(X) :-
     write(X),
     nl.
+
+Board = [[empty, empty, white, empty, empty, empty, empty],
+[empty, black, empty, empty, empty, empty, empty],
+[empty, empty, white_stack, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty],
+[empty, empty, empty, empty, empty, empty, empty]].
