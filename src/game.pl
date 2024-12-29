@@ -83,3 +83,14 @@ replace_in_list([X|Rest], N, Elem, [X|NewRest]) :-
 switch_player(white, black).
 switch_player(black, white).
 
+% Generates a list of all valid moves for the current game state.
+valid_moves(state(Board, _), Moves) :-
+    findall((Row, Col), valid_position(Board, Row, Col), Moves).
+
+% Ensures the position (Row, Col) is valid (empty and within bounds).
+valid_position(Board, Row, Col) :-
+    length(Board, Size),         % Get the board size.
+    between(1, Size, Row),       % Ensure Row is within bounds.
+    between(1, Size, Col),       % Ensure Col is within bounds.
+    nth1(Row, Board, CurrentRow),% Get the target row.
+    nth1(Col, CurrentRow, empty).% Check that the cell is empty.
