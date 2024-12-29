@@ -141,12 +141,24 @@ find_adjacent_vertical(Board, Player, Row, Col, Direction, AdjacentCells) :-
 
 % Finds adjacent cells diagonally.
 adjacent_diagonal(Board, Player, Row, Col, AdjRow, AdjCol) :-
-    (AdjRow is Row - 1, AdjCol is Col - 1;
-     AdjRow is Row - 1, AdjCol is Col + 1;
-     AdjRow is Row + 1, AdjCol is Col - 1;
-     AdjRow is Row + 1, AdjCol is Col + 1),
-    nth1(AdjRow, Board, AdjRowList),
-    nth1(AdjCol, AdjRowList, Player).
+    find_adjacent_diagonal(Board, Player, Row, Col, -1, -1, UpLeftCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, -1, 1, UpRightCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, 1, -1, DownLeftCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, 1, 1, DownRightCells),
+    append([UpLeftCells, UpRightCells, DownLeftCells, DownRightCells], AdjacentCells),
+    member((AdjRow, AdjCol), AdjacentCells).
+
+% Helper predicate to find adjacent cells in a specific direction.
+find_adjacent_diagonal(Board, Player, Row, Col, RowDir, ColDir, AdjacentCells) :-
+    NextRow is Row + RowDir,
+    NextCol is Col + ColDir,
+    (   NextRow > 0, NextCol > 0,
+        nth1(NextRow, Board, RowList),
+        nth1(NextCol, RowList, Player)
+    ->  find_adjacent_diagonal(Board, Player, NextRow, NextCol, RowDir, ColDir, RestCells),
+        AdjacentCells = [(NextRow, NextCol) | RestCells]
+    ;   AdjacentCells = []
+    ).
 
 % Switches the player.
 switch_player(white, black).
