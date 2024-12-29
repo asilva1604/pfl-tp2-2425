@@ -50,11 +50,3 @@ symbol_for_cell(black_stack, 'BB ').
 writeln(X) :-
     write(X),
     nl.
-
-Board = [[empty, empty, white, empty, empty, empty, empty],
-[empty, black, empty, empty, empty, empty, empty],
-[empty, empty, white_stack, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty],
-[empty, empty, empty, empty, empty, empty, empty]].
