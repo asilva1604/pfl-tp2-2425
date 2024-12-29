@@ -65,6 +65,7 @@ move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
 % Checks for lines of three or more consecutive pieces and handles them.
 check_lines(Board, Player, Row, Col, NewBoard) :-
     (   line_of_three(Board, Player, Row, Col, Line) ->
+        writeln('Line of three detected!'),
         handle_line(Board, Line, Player, NewBoard)
     ;   NewBoard = Board).
 
@@ -75,9 +76,27 @@ line_of_three(Board, Player, Row, Col, Line) :-
         diagonal_line(Board, Player, Row, Col, Line)
     ).
 
+adjacent_horizontal(Board, Player, Row, Col, AdjCol) :-
+    find_adjacent_horizontal(Board, Player, Row, Col, -1, LeftCells),
+    find_adjacent_horizontal(Board, Player, Row, Col, 1, RightCells),
+    append(LeftCells, RightCells, AdjacentCells),
+    member(AdjCol, AdjacentCells).
+
+% Helper predicate to find adjacent cells in a specific direction.
+find_adjacent_horizontal(Board, Player, Row, Col, Direction, AdjacentCells) :-
+    NextCol is Col + Direction,
+    (   NextCol > 0,
+        nth1(Row, Board, RowList),
+        nth1(NextCol, RowList, Player)
+    ->  find_adjacent_horizontal(Board, Player, Row, NextCol, Direction, RestCells),
+        AdjacentCells = [NextCol | RestCells]
+    ;   AdjacentCells = []
+    ).
+
 % Checks for a horizontal line of three or more consecutive pieces.
 horizontal_line(Board, Player, Row, Col, Line) :-
     findall((Row, C), (adjacent_horizontal(Board, Player, Row, Col, C)), AdjacentCells),
+    writeln(AdjacentCells),
     length(AdjacentCells, Length),
     Length >= 2,
     Line = [(Row, Col) | AdjacentCells].
@@ -103,12 +122,6 @@ handle_line(Board, [(R1, C1), (R2, C2), (R3, C3) | Rest], Player, NewBoard) :-
     replace(TempBoard2, R3, C3, stack(Player), TempBoard3),
     handle_line(TempBoard3, Rest, Player, NewBoard).
 handle_line(Board, [], _, Board).
-
-% Finds adjacent cells horizontally.
-adjacent_horizontal(Board, Player, Row, Col, AdjCol) :-
-    (AdjCol is Col - 1; AdjCol is Col + 1),
-    nth1(Row, Board, RowList),
-    nth1(AdjCol, RowList, Player).
 
 % Finds adjacent cells vertically.
 adjacent_vertical(Board, Player, Row, Col, AdjRow) :-
