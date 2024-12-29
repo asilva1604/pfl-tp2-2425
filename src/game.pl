@@ -123,9 +123,21 @@ handle_line(Board, [], _, Board).
 
 % Finds adjacent cells vertically.
 adjacent_vertical(Board, Player, Row, Col, AdjRow) :-
-    (AdjRow is Row - 1; AdjRow is Row + 1),
-    nth1(AdjRow, Board, AdjRowList),
-    nth1(Col, AdjRowList, Player).
+    find_adjacent_vertical(Board, Player, Row, Col, -1, UpCells),
+    find_adjacent_vertical(Board, Player, Row, Col, 1, DownCells),
+    append(UpCells, DownCells, AdjacentCells),
+    member(AdjRow, AdjacentCells).
+
+% Helper predicate to find adjacent cells in a specific direction.
+find_adjacent_vertical(Board, Player, Row, Col, Direction, AdjacentCells) :-
+    NextRow is Row + Direction,
+    (   NextRow > 0,
+        nth1(NextRow, Board, RowList),
+        nth1(Col, RowList, Player)
+    ->  find_adjacent_vertical(Board, Player, NextRow, Col, Direction, RestCells),
+        AdjacentCells = [NextRow | RestCells]
+    ;   AdjacentCells = []
+    ).
 
 % Finds adjacent cells diagonally.
 adjacent_diagonal(Board, Player, Row, Col, AdjRow, AdjCol) :-
