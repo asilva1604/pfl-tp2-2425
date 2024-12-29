@@ -1,0 +1,1 @@
+initial_state(_, _State), move(_State, (4, 4),_S1),move(_S1, (4, 1), _S2),move(_S2, (3,3), _S3),move(_S3, (5, 1), _S4),move(_S4,(5, 5), S5), display_game(S5).
