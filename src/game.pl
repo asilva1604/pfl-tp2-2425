@@ -45,8 +45,8 @@ display_row([Cell | Rest]) :-
 symbol_for_cell(empty, '.  ').
 symbol_for_cell(white, 'W  ').
 symbol_for_cell(black, 'B  ').
-symbol_for_cell(white_stack, 'WW ').
-symbol_for_cell(black_stack, 'BB ').
+symbol_for_cell(stack(white), 'WW ').
+symbol_for_cell(stack(black), 'BB ').
 
 writeln(X) :-
     write(X),
@@ -65,7 +65,6 @@ move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
 % Checks for lines of three or more consecutive pieces and handles them.
 check_lines(Board, Player, Row, Col, NewBoard) :-
     (   line_of_three(Board, Player, Row, Col, Line) ->
-        writeln('Line of three detected!'),
         handle_line(Board, Line, Player, NewBoard)
     ;   NewBoard = Board).
 
@@ -96,7 +95,6 @@ find_adjacent_horizontal(Board, Player, Row, Col, Direction, AdjacentCells) :-
 % Checks for a horizontal line of three or more consecutive pieces.
 horizontal_line(Board, Player, Row, Col, Line) :-
     findall((Row, C), (adjacent_horizontal(Board, Player, Row, Col, C)), AdjacentCells),
-    writeln(AdjacentCells),
     length(AdjacentCells, Length),
     Length >= 2,
     Line = [(Row, Col) | AdjacentCells].
