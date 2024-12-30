@@ -54,15 +54,17 @@ writeln(X) :-
     write(X),
     nl.
 
-% Applies a move to the game state, resulting in a new game state.
 move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),          % Ensure the position is valid.
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
     replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
     check_lines(TempBoard, Player, Row, Col, TempBoard2), % Check for lines of three and handle them.
-    switch_player(Player, NextPlayer),       % Switch the player.
-    NewBoard = TempBoard2.                   % Set the new board state.
+    (   game_over(state(TempBoard2, Player), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), !, fail
+    ;   switch_player(Player, NextPlayer),       % Switch the player.
+        NewBoard = TempBoard2                   % Set the new board state.
+    ).
 
 % Checks for lines of three or more consecutive pieces and handles them.
 check_lines(Board, Player, Row, Col, NewBoard) :-
@@ -196,3 +198,54 @@ replace_in_row([Col|RestCols], ColIndex, Elem, [Col|NewRestCols]) :-
     ColIndex > 1,
     NewColIndex is ColIndex - 1,
     replace_in_row(RestCols, NewColIndex, Elem, NewRestCols).
+
+
+% Determines if the game is over and declares the winner.
+game_over(state(Board, _), Winner) :-
+    (   winning_line(Board, stack(white)) -> Winner = white
+    ;   winning_line(Board, stack(black)) -> Winner = black
+    ;   board_full(Board) -> Winner = draw
+    ;   fail % The game is not over yet.
+    ).
+
+% Checks if there is a winning line for the given stack type.
+winning_line(Board, StackType) :-
+(   row_win(Board, StackType)
+;   column_win(Board, StackType)
+;   diagonal_win(Board, StackType)
+).
+
+% Checks for a row win.
+row_win(Board, StackType) :-
+    member(Row, Board),
+    sublist_of_three(Row, StackType).
+
+% Checks for a column win by transposing the board and checking rows.
+column_win(Board, StackType) :-
+    transpose(Board, Transposed),
+    row_win(Transposed, StackType).
+
+% Checks for a diagonal win.
+diagonal_win(Board, StackType) :-
+    major_diagonal(Board, Diagonal),
+    sublist_of_three(Diagonal, StackType).
+diagonal_win(Board, StackType) :-
+    minor_diagonal(Board, Diagonal),
+    sublist_of_three(Diagonal, StackType).
+
+% Helper: Finds a major diagonal.
+major_diagonal(Board, Diagonal) :-
+    findall(Cell, (nth1(Index, Board, Row), nth1(Index, Row, Cell)), Diagonal).
+
+% Helper: Finds a minor diagonal.
+minor_diagonal(Board, Diagonal) :-
+    reverse(Board, Reversed),
+    major_diagonal(Reversed, Diagonal).
+
+% Helper: Checks if there is a sublist of three identical elements.
+sublist_of_three(List, Elem) :-
+    append(_, [Elem, Elem, Elem | _], List).
+
+% Checks if the board is full (no empty cells).
+board_full(Board) :-
+    \+ (member(Row, Board), member(empty, Row)).
