@@ -1,5 +1,7 @@
 :- use_module(library(lists)).
 :- use_module(library(between)).
+
+
 % Initializes the game state for LOT.
 % GameConfig: Contains additional configuration options if needed (e.g., future extensions).
 % GameState: The initial state of the game.
@@ -65,8 +67,20 @@ move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
 % Checks for lines of three or more consecutive pieces and handles them.
 check_lines(Board, Player, Row, Col, NewBoard) :-
     (   line_of_three(Board, Player, Row, Col, Line) ->
-        handle_line(Board, Line, Player, NewBoard)
-    ;   NewBoard = Board).
+        handle_line(Board, Player, Line, NewBoard)
+    ;   NewBoard = Board
+    ).
+
+% Handles a line of three pieces by asking the user which piece to keep as the stack.
+handle_line(Board, Player, Line, NewBoard) :-
+    format('Line of three found at coordinates: ~w~n', [Line]),
+    writeln('Choose which piece to keep as the stack (1, 2, or 3): '),
+    read(Choice),
+    nth1(Choice, Line, (KeepRow, KeepCol)),
+    delete(Line, (KeepRow, KeepCol), [(RemoveRow1, RemoveCol1), (RemoveRow2, RemoveCol2)]),
+    replace(Board, RemoveRow1, RemoveCol1, empty, TempBoard1),
+    replace(TempBoard1, RemoveRow2, RemoveCol2, empty, TempBoard2),
+    replace(TempBoard2, KeepRow, KeepCol, stack(Player), NewBoard).
 
 % Checks if placing a piece creates a line of three or more consecutive pieces.
 line_of_three(Board, Player, Row, Col, Line) :-
@@ -112,14 +126,6 @@ diagonal_line(Board, Player, Row, Col, Line) :-
     length(AdjacentCells, Length),
     Length >= 2,
     Line = [(Row, Col) | AdjacentCells].
-
-% Handles a line of three by removing two pieces and creating a stack.
-handle_line(Board, [(R1, C1), (R2, C2), (R3, C3) | Rest], Player, NewBoard) :-
-    replace(Board, R1, C1, empty, TempBoard1),
-    replace(TempBoard1, R2, C2, empty, TempBoard2),
-    replace(TempBoard2, R3, C3, stack(Player), TempBoard3),
-    handle_line(TempBoard3, Rest, Player, NewBoard).
-handle_line(Board, [], _, Board).
 
 % Finds adjacent cells vertically.
 adjacent_vertical(Board, Player, Row, Col, AdjRow) :-
