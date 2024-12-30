@@ -249,3 +249,38 @@ sublist_of_three(List, Elem) :-
 % Checks if the board is full (no empty cells).
 board_full(Board) :-
     \+ (member(Row, Board), member(empty, Row)).
+
+pie_rulable(Board) :- one_piece(Board).
+
+one_piece([Head|Tail]) :-      % applies for both Row-Board and Element-Row pairs
+    one_piece(Head),
+    no_piece(Tail).
+one_piece([Head|Tail]) :-
+    no_piece(Head),
+    one_piece(Tail).
+one_piece(white).
+one_piece(black).
+
+no_piece([Head|Tail]) :-
+    no_piece(Head),
+    no_piece(Tail).
+no_piece(empty).
+no_piece([]).
+
+
+move(state(Board, Player), (Row, Col), state(NewBoard, Player)) :-
+    pie_rulable(Board),
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    switch_player(Player, SwappedPlayer),    % Swap player before replacing 
+    replace(Board, Row, Col, SwappedPlayer, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), !, fail
+    ;    NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
+
+%move(S1, (2,2), state(B, white))
+%move(state(B, white), (3,3), S3)
