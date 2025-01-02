@@ -249,3 +249,36 @@ sublist_of_three(List, Elem) :-
 % Checks if the board is full (no empty cells).
 board_full(Board) :-
     \+ (member(Row, Board), member(empty, Row)).
+
+choose_move(state(Board, white), human, Move) :-
+    writeln('Your colour is white. Enter your move:'),
+    writeln('Enter your move row:'),
+    read(Row),
+    writeln('Enter your move column:'),
+    read(Col),
+    Move = (Row, Col).
+
+choose_move(state(Board, black), human, Move) :-
+    writeln('Your colour is black. Enter your move:'),
+    writeln('Enter your move row:'),
+    read(Row),
+    writeln('Enter your move column:'),
+    read(Col),
+    Move = (Row, Col).
+
+play :-
+    initial_state(_, InitialState),
+    writeln('Welcome to LOT! Enter the desired game mode'),
+    writeln('1. Human vs Human'),
+    writeln('2. Human vs AI'),
+    writeln('3. AI vs Human'),
+    writeln('4. AI vs AI'),
+    read(GameMode),
+    play(InitialState, GameMode).
+
+play(State, 1) :-
+    display_game(State),
+    valid_moves(State, Moves),
+    choose_move(State, human, Move),
+    move(State, Move, NewState),
+    play(NewState, 1).
