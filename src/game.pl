@@ -310,3 +310,11 @@ play(State, 2, ai, 1) :-
     choose_move(State, easy_ai, Move),
     move(State, Move, NewState),
     play(NewState, 2, human, 1).
+
+play(State, 3) :-
+    writeln('Select the AI level:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(AILevel),
+    play(State, 2, ai, AILevel).
