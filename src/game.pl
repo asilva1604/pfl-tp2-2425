@@ -61,7 +61,7 @@ move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
     replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
     check_lines(TempBoard, Player, Row, Col, TempBoard2), % Check for lines of three and handle them.
     (   game_over(state(TempBoard2, Player), Winner)
-    ->  format('Game over! Winner: ~w~n', [Winner]), !, fail
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player)),!, fail
     ;   switch_player(Player, NextPlayer),       % Switch the player.
         NewBoard = TempBoard2                   % Set the new board state.
     ).
