@@ -284,3 +284,35 @@ move(state(Board, Player), (Row, Col), state(NewBoard, Player)) :-
 
 %move(S1, (2,2), state(B, white))
 %move(state(B, white), (3,3), S3)
+
+
+% if board results in game win, assign it max value
+value(Board, Player, Value) :-
+    game_over(state(Board, Player), Player),
+    Value is 999, !.
+
+% favorable conditions heuristics
+% > any single piece on the board - 0 pts - as both players are always obliged to place one
+% > 2 pieces (either single or stack) in an uninterrupted line - 1 pt
+% > 1 stack - 4 pts - so as to be larger than the maximum pts one board can achieve greater than the previous by placing a piece that doesn't make a stack
+% > (?) 2 stacks in an uninterrupted line - 2 pts
+
+% NOTE: first condition is only counting regarding lines of 2 single pieces
+value(Board, Player, Value) :-
+    count_lines_of_two(Board, Player, LineOfTwoSingleCount),
+    count_stacks(Board, Player, StackCount),
+    count_lines_of_two(Board, stack(Player), LineOfTwoStackCount),
+    Value is LineOfTwoSingleCount + StackCount*4 + LineOfTwoStackCount*2.
+
+
+
+% counts lines of 2 uninterrupted (by opposite color) pieces (stack or single) of Player color
+count_lines_of_two(Board, Player, Count) :-
+    findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, empty), line_of_three(Board, Player, CurrentRow, Col, _)), FavorableCells),
+    length(FavorableCells, Count).
+
+count_stacks(Board, Player, Count) :-
+    findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, stack(Player))), Stacks),
+    length(Stacks, Counts).
+
+
