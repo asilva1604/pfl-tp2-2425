@@ -11,7 +11,7 @@ initial_state(GameConfig, GameState) :-
     % Create the 7x7 empty board.
     create_board(7, Board),
     % Define the initial game state.
-    GameState = state(Board, white).
+    GameState = state(Board, white, empty).
 
 % Helper predicate to create an empty board of a given size.
 create_board(Size, Board) :-
@@ -24,7 +24,7 @@ create_row(Size, Row) :-
     maplist(=(empty), Row).             % Initialize all cells to 'empty'.
 
 % Displays the current game state: the board and the current player.
-display_game(state(Board, Player)) :-
+display_game(state(Board, Player, _)) :-
     write('Current player: '), writeln(Player),
     write('  1   2   3   4   5   6   7  '), nl, % Column headers
     display_rows(Board, 1).
@@ -55,14 +55,14 @@ writeln(X) :-
     write(X),
     nl.
 
-move(state(Board, Player), (Row, Col), state(NewBoard, NextPlayer)) :-
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),          % Ensure the position is valid.
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
     replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
     check_lines(TempBoard, Player, Row, Col, TempBoard2), % Check for lines of three and handle them.
-    (   game_over(state(TempBoard2, Player), Winner)
-    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player)),!, fail
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
     ;   switch_player(Player, NextPlayer),       % Switch the player.
         NewBoard = TempBoard2                   % Set the new board state.
     ).
@@ -174,7 +174,7 @@ switch_player(white, black).
 switch_player(black, white).
 
 % Generates a list of all valid moves for the current game state.
-valid_moves(state(Board, _), Moves) :-
+valid_moves(state(Board, _, _), Moves) :-
     findall((Row, Col), valid_position(Board, Row, Col), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
@@ -202,7 +202,7 @@ replace_in_row([Col|RestCols], ColIndex, Elem, [Col|NewRestCols]) :-
 
 
 % Determines if the game is over and declares the winner.
-game_over(state(Board, _), Winner) :-
+game_over(state(Board, _, _), Winner) :-
     (   winning_line(Board, stack(white)) -> Winner = white
     ;   winning_line(Board, stack(black)) -> Winner = black
     ;   board_full(Board) -> Winner = draw
@@ -251,7 +251,7 @@ sublist_of_three(List, Elem) :-
 board_full(Board) :-
     \+ (member(Row, Board), member(empty, Row)).
 
-choose_move(state(Board, white), human, Move) :-
+choose_move(state(Board, white, _), human, Move) :-
     writeln('Your colour is white. Enter your move:'),
     writeln('Enter your move row:'),
     read(Row),
@@ -259,7 +259,7 @@ choose_move(state(Board, white), human, Move) :-
     read(Col),
     Move = (Row, Col).
 
-choose_move(state(Board, black), human, Move) :-
+choose_move(state(Board, black, _), human, Move) :-
     writeln('Your colour is black. Enter your move:'),
     writeln('Enter your move row:'),
     read(Row),
@@ -267,12 +267,12 @@ choose_move(state(Board, black), human, Move) :-
     read(Col),
     Move = (Row, Col).
 
-choose_move(state(Board, white), easy_ai, Move) :-
-    valid_moves(state(Board, white), Moves),
+choose_move(state(Board, white, Mode), easy_ai, Move) :-
+    valid_moves(state(Board, white, Mode), Moves),
     random_member(Move, Moves).
 
-choose_move(state(Board, black), easy_ai, Move) :-
-    valid_moves(state(Board, black), Moves),
+choose_move(state(Board, black, Mode), easy_ai, Move) :-
+    valid_moves(state(Board, black, Mode), Moves),
     random_member(Move, Moves).
 
 play :-
@@ -285,7 +285,8 @@ play :-
     read(GameMode),
     play(InitialState, GameMode).
 
-play(State, 1) :-
+play(state(Board, Player, 1), 1) :-
+    State is state(Board, Player, 1),
     display_game(State),
     choose_move(State, human, Move),
     move(State, Move, NewState),
