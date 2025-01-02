@@ -292,16 +292,21 @@ play(State, 1) :-
     play(NewState, 1).
 
 play(State, 2) :-
-    play(State, 2, human).
+    writeln('Select the AI level:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(AILevel),
+    play(State, 2, human, AILevel).
 
-play(State, 2, human) :-
+play(State, 2, human, 1) :-
     display_game(State),
     choose_move(State, human, Move),
     move(State, Move, NewState),
-    play(NewState, 2, ai).
+    play(NewState, 2, ai, 1).
 
-play(State, 2, ai) :-
+play(State, 2, ai, 1) :-
     display_game(State),
     choose_move(State, ai, Move),
     move(State, Move, NewState),
-    play(NewState, 2, human).
+    play(NewState, 2, human, 1).
