@@ -105,24 +105,29 @@ check_lines(Board, Player, Row, Col, NewBoard, 4) :-
     ;   NewBoard = Board
     ).
 
-% Handles a line of three pieces by asking the user which piece to keep as the stack.
+% Handles a line of three or more pieces by asking the user which piece to keep as the stack.
 handle_line(Board, Player, Line, NewBoard) :-
-    format('Line of three found at coordinates: ~w~n', [Line]),
-    writeln('Choose which piece to keep as the stack (1, 2, or 3): '),
+    format('Line of three or more found at coordinates: ~w~n', [Line]),
+    writeln('Choose which piece to keep as the stack (1, 2, 3, etc): '),
     read(Choice),
     nth1(Choice, Line, (KeepRow, KeepCol)),
-    delete(Line, (KeepRow, KeepCol), [(RemoveRow1, RemoveCol1), (RemoveRow2, RemoveCol2)]),
-    replace(Board, RemoveRow1, RemoveCol1, empty, TempBoard1),
-    replace(TempBoard1, RemoveRow2, RemoveCol2, empty, TempBoard2),
-    replace(TempBoard2, KeepRow, KeepCol, stack(Player), NewBoard).
+    delete(Line, (KeepRow, KeepCol), RemainingLine),
+    remove_pieces(RemainingLine, Board, TempBoard),
+    replace(TempBoard, KeepRow, KeepCol, stack(Player), NewBoard).
 
+% Handles a line of three or more pieces automatically for AI by keeping the middle piece as the stack.
 handle_line_ai(Board, Player, Line, NewBoard) :-
-    random_member(Choice, Line),
-    nth1(Choice, Line, (KeepRow, KeepCol)),
-    delete(Line, (KeepRow, KeepCol), [(RemoveRow1, RemoveCol1), (RemoveRow2, RemoveCol2)]),
-    replace(Board, RemoveRow1, RemoveCol1, empty, TempBoard1),
-    replace(TempBoard1, RemoveRow2, RemoveCol2, empty, TempBoard2),
-    replace(TempBoard2, KeepRow, KeepCol, stack(Player), NewBoard).
+    random(1, 3, Index),
+    nth1(Index, Line, (KeepRow, KeepCol)),
+    delete(Line, (KeepRow, KeepCol), RemainingLine),
+    remove_pieces(RemainingLine, Board, TempBoard),
+    replace(TempBoard, KeepRow, KeepCol, stack(Player), NewBoard).
+
+% Removes pieces from the board.
+remove_pieces([], Board, Board).
+remove_pieces([(Row, Col) | Rest], Board, NewBoard) :-
+    replace(Board, Row, Col, empty, TempBoard),
+    remove_pieces(Rest, TempBoard, NewBoard).
 
 % Checks if placing a piece creates a line of three or more consecutive pieces.
 line_of_three(Board, Player, Row, Col, Line) :-
@@ -336,7 +341,7 @@ play(state(Board, Player, 2)) :-
     writeln('2. Medium'),
     writeln('3. Hard'),
     read(AILevel),
-    play(State, 2, human, AILevel).
+    play(state(Board, Player, 2), 2, human, AILevel).
 
 play(state(Board, Player, 3)) :-
     writeln('Select the AI level:'),
@@ -344,10 +349,7 @@ play(state(Board, Player, 3)) :-
     writeln('2. Medium'),
     writeln('3. Hard'),
     read(AILevel),
-    play(State, 2, ai, AILevel).
-
-play(state(Board, Player, 3)) :-
-    play(State, 4, ai1, 1).
+    play(state(Board, Player, 3), 2, ai, AILevel).
 
 play(State, 2, human, 1) :-
     display_game(State),
@@ -360,6 +362,19 @@ play(State, 2, ai, 1) :-
     choose_move(State, easy_ai, Move),
     move(State, Move, NewState),
     play(NewState, 2, human, 1).
+
+play(state(Board, Player, 4)) :-
+    writeln('Select the AI level for AI1:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(AILevel1),
+    writeln('Select the AI level for AI2:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(AILevel2),
+    play(state(Board, Player, 4), 4, ai1, 1).
 
 play(State, 4, ai1, 1) :-
     display_game(State),
