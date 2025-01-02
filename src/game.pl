@@ -318,3 +318,18 @@ play(State, 3) :-
     writeln('3. Hard'),
     read(AILevel),
     play(State, 2, ai, AILevel).
+
+play(State, 4) :-
+    play(State, 4, ai1, 1).
+
+play(State, 4, ai1, 1) :-
+    display_game(State),
+    choose_move(State, easy_ai, Move),
+    move(State, Move, NewState),
+    play(NewState, 4, ai2, 1).
+
+play(State, 4, ai2, 1) :-
+    display_game(State),
+    choose_move(State, easy_ai, Move),
+    move(State, Move, NewState),
+    play(NewState, 4, ai1, 1).
