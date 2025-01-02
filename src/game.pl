@@ -351,17 +351,17 @@ play(state(Board, Player, 3)) :-
     read(AILevel),
     play(state(Board, Player, 3), 2, ai, AILevel).
 
-play(State, 2, human, 1) :-
-    display_game(State),
-    choose_move(State, human, Move),
-    move(State, Move, NewState),
+play(state(Board, Player, Mode), 2, human, 1) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), human, Move),
+    move(state(Board, Player, Mode), Move, NewState),
     play(NewState, 2, ai, 1).
 
-play(State, 2, ai, 1) :-
-    display_game(State),
-    choose_move(State, easy_ai, Move),
-    move(State, Move, NewState),
-    play(NewState, 2, human, 1).
+play(state(Board, Player, Mode), 2, ai, 1) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), easy_ai, Move),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    play(state(Board1, Player1, Mode), 2, human, 1).
 
 play(state(Board, Player, 4)) :-
     writeln('Select the AI level for AI1:'),
