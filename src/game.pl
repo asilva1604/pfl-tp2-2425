@@ -1,5 +1,6 @@
 :- use_module(library(lists)).
 :- use_module(library(between)).
+:- use_module(library(random)).
 
 
 % Initializes the game state for LOT.
@@ -266,6 +267,14 @@ choose_move(state(Board, black), human, Move) :-
     read(Col),
     Move = (Row, Col).
 
+choose_move(state(Board, white), ai, Move) :-
+    valid_moves(state(Board, white), Moves),
+    random_member(Move, Moves).
+
+choose_move(state(Board, black), ai, Move) :-
+    valid_moves(state(Board, black), Moves),
+    random_member(Move, Moves).
+
 play :-
     initial_state(_, InitialState),
     writeln('Welcome to LOT! Enter the desired game mode'),
@@ -278,7 +287,21 @@ play :-
 
 play(State, 1) :-
     display_game(State),
-    valid_moves(State, Moves),
     choose_move(State, human, Move),
     move(State, Move, NewState),
     play(NewState, 1).
+
+play(State, 2) :-
+    play(State, 2, human).
+
+play(State, 2, human) :-
+    display_game(State),
+    choose_move(State, human, Move),
+    move(State, Move, NewState),
+    play(NewState, 2, ai).
+
+play(State, 2, ai) :-
+    display_game(State),
+    choose_move(State, ai, Move),
+    move(State, Move, NewState),
+    play(NewState, 2, human).
