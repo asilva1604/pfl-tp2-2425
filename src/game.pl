@@ -298,6 +298,7 @@ value(Board, Player, Value) :-
 % > (?) 2 stacks in an uninterrupted line - 2 pts
 
 % NOTE: first condition is only counting regarding lines of 2 single pieces
+% NOTE: may need some weight towards placing single pieces near stacks; otherwise, level 2 AI may be a bit random
 value(Board, Player, Value) :-
     count_lines_of_two(Board, Player, LineOfTwoSingleCount),
     count_stacks(Board, Player, StackCount),
