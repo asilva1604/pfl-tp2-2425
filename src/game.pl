@@ -267,11 +267,11 @@ choose_move(state(Board, black), human, Move) :-
     read(Col),
     Move = (Row, Col).
 
-choose_move(state(Board, white), ai, Move) :-
+choose_move(state(Board, white), easy_ai, Move) :-
     valid_moves(state(Board, white), Moves),
     random_member(Move, Moves).
 
-choose_move(state(Board, black), ai, Move) :-
+choose_move(state(Board, black), easy_ai, Move) :-
     valid_moves(state(Board, black), Moves),
     random_member(Move, Moves).
 
@@ -307,6 +307,6 @@ play(State, 2, human, 1) :-
 
 play(State, 2, ai, 1) :-
     display_game(State),
-    choose_move(State, ai, Move),
+    choose_move(State, easy_ai, Move),
     move(State, Move, NewState),
     play(NewState, 2, human, 1).
