@@ -167,13 +167,6 @@ vertical_line(Board, Player, Row, Col, Line) :-
     Length >= 2,
     Line = [(Row, Col) | AdjacentCells].
 
-% Checks for a diagonal line of three or more consecutive pieces.
-diagonal_line(Board, Player, Row, Col, Line) :-
-    findall((R, C), (adjacent_diagonal(Board, Player, Row, Col, R, C)), AdjacentCells),
-    length(AdjacentCells, Length),
-    Length >= 2,
-    Line = [(Row, Col) | AdjacentCells].
-
 % Finds adjacent cells vertically.
 adjacent_vertical(Board, Player, Row, Col, AdjRow) :-
     find_adjacent_vertical(Board, Player, Row, Col, -1, UpCells),
@@ -201,7 +194,51 @@ adjacent_diagonal(Board, Player, Row, Col, AdjRow, AdjCol) :-
     append([UpLeftCells, UpRightCells, DownLeftCells, DownRightCells], AdjacentCells),
     member((AdjRow, AdjCol), AdjacentCells).
 
-% Helper predicate to find adjacent cells in a specific direction.
+% Checks for a diagonal line of three or more consecutive pieces
+diagonal_line(Board, Player, Row, Col, Line) :-
+    findall((R, C), (
+        adjacent_diagonal_2(Board, Player, Row, Col, R, C)
+    ), AdjacentCells),
+    length(AdjacentCells, Length),
+    Length >= 2,
+    are_consecutive_diagonal([(Row, Col)|AdjacentCells]),
+    Line = [(Row, Col)|AdjacentCells].
+
+% Modified adjacent_diagonal to ensure consecutiveness
+adjacent_diagonal_2(Board, Player, Row, Col, AdjRow, AdjCol) :-
+    find_adjacent_diagonal(Board, Player, Row, Col, -1, -1, UpLeftCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, -1, 1, UpRightCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, 1, -1, DownLeftCells),
+    find_adjacent_diagonal(Board, Player, Row, Col, 1, 1, DownRightCells),
+    append([UpLeftCells, UpRightCells, DownLeftCells, DownRightCells], AdjacentCells),
+    member((AdjRow, AdjCol), AdjacentCells).
+
+% Check if points form a consecutive diagonal line
+are_consecutive_diagonal(Points) :-
+    sort_points(Points, Sorted),  % Sort points by row
+    consecutive_points(Sorted).
+
+% Sort points by row number
+sort_points(Points, Sorted) :-
+    % Convert points to row-keyed terms for sorting
+    findall(Key-(R,C), (
+        member((R,C), Points),
+        Key = R
+    ), KeyPoints),
+    keysort(KeyPoints, SortedKeyPoints),
+    % Extract just the points back out
+    findall((R,C), 
+        member(_-(R,C), SortedKeyPoints),
+        Sorted).
+
+consecutive_points([]).
+consecutive_points([_]).
+consecutive_points([(R1, C1), (R2, C2)|Rest]) :-
+    abs(R2 - R1) =:= 1,
+    abs(C2 - C1) =:= 1,
+    consecutive_points([(R2, C2)|Rest]).
+
+% Original find_adjacent_diagonal remains unchanged
 find_adjacent_diagonal(Board, Player, Row, Col, RowDir, ColDir, AdjacentCells) :-
     NextRow is Row + RowDir,
     NextCol is Col + ColDir,
