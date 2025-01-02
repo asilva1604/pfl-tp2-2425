@@ -7,12 +7,25 @@
 % GameConfig: Contains additional configuration options if needed (e.g., future extensions).
 % GameState: The initial state of the game.
 
-initial_state(GameConfig, GameState) :-
-    % Create the 7x7 empty board.
-    create_board(7, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, empty).
+initial_state((Size, 1), GameState) :-
+    create_board(Size, Board),
+    GameState = state(Board, white, 1).
 
+initial_state((Size, 2), GameState) :-
+    create_board(Size, Board),
+    % Define the initial game state.
+    GameState = state(Board, white, 2).
+
+initial_state((Size, 3), GameState) :-
+    create_board(Size, Board),
+    % Define the initial game state.
+    GameState = state(Board, white, 3).
+
+initial_state((Size, 4), GameState) :-
+    create_board(Size, Board),
+    % Define the initial game state.
+    GameState = state(Board, white, 4).
+    
 % Helper predicate to create an empty board of a given size.
 create_board(Size, Board) :-
     length(Board, Size),                % Create a list of rows.
@@ -60,7 +73,7 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) 
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
     replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
-    check_lines(TempBoard, Player, Row, Col, TempBoard2), % Check for lines of three and handle them.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
     (   game_over(state(TempBoard2, Player, Mode), Winner)
     ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
     ;   switch_player(Player, NextPlayer),       % Switch the player.
@@ -68,9 +81,27 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) 
     ).
 
 % Checks for lines of three or more consecutive pieces and handles them.
-check_lines(Board, Player, Row, Col, NewBoard) :-
+check_lines(Board, Player, Row, Col, NewBoard, 1) :-
     (   line_of_three(Board, Player, Row, Col, Line) ->
         handle_line(Board, Player, Line, NewBoard)
+    ;   NewBoard = Board
+    ).
+
+check_lines(Board, Player, Row, Col, NewBoard, 2) :-
+    (   line_of_three(Board, Player, Row, Col, Line) ->
+        handle_line(Board, Player, Line, NewBoard)
+    ;   NewBoard = Board
+    ).
+
+check_lines(Board, Player, Row, Col, NewBoard, 3) :-
+    (   line_of_three(Board, Player, Row, Col, Line) ->
+        handle_line(Board, Player, Line, NewBoard)
+    ;   NewBoard = Board
+    ).
+
+check_lines(Board, Player, Row, Col, NewBoard, 4) :-
+    (   line_of_three(Board, Player, Row, Col, Line) ->
+        handle_line_ai(Board, Player, Line, NewBoard)
     ;   NewBoard = Board
     ).
 
@@ -79,6 +110,14 @@ handle_line(Board, Player, Line, NewBoard) :-
     format('Line of three found at coordinates: ~w~n', [Line]),
     writeln('Choose which piece to keep as the stack (1, 2, or 3): '),
     read(Choice),
+    nth1(Choice, Line, (KeepRow, KeepCol)),
+    delete(Line, (KeepRow, KeepCol), [(RemoveRow1, RemoveCol1), (RemoveRow2, RemoveCol2)]),
+    replace(Board, RemoveRow1, RemoveCol1, empty, TempBoard1),
+    replace(TempBoard1, RemoveRow2, RemoveCol2, empty, TempBoard2),
+    replace(TempBoard2, KeepRow, KeepCol, stack(Player), NewBoard).
+
+handle_line_ai(Board, Player, Line, NewBoard) :-
+    random_member(Choice, Line),
     nth1(Choice, Line, (KeepRow, KeepCol)),
     delete(Line, (KeepRow, KeepCol), [(RemoveRow1, RemoveCol1), (RemoveRow2, RemoveCol2)]),
     replace(Board, RemoveRow1, RemoveCol1, empty, TempBoard1),
@@ -276,29 +315,39 @@ choose_move(state(Board, black, Mode), easy_ai, Move) :-
     random_member(Move, Moves).
 
 play :-
-    initial_state(_, InitialState),
     writeln('Welcome to LOT! Enter the desired game mode'),
     writeln('1. Human vs Human'),
     writeln('2. Human vs AI'),
     writeln('3. AI vs Human'),
     writeln('4. AI vs AI'),
     read(GameMode),
-    play(InitialState, GameMode).
+    initial_state((7, GameMode), State),
+    play(State).
 
-play(state(Board, Player, 1), 1) :-
-    State is state(Board, Player, 1),
-    display_game(State),
-    choose_move(State, human, Move),
-    move(State, Move, NewState),
-    play(NewState, 1).
+play(state(Board, Player, 1)) :-
+    display_game(state(Board, Player, 1)),
+    choose_move(state(Board, Player, 1), human, Move),
+    move(state(Board, Player, 1), Move, NewState),
+    play(NewState).
 
-play(State, 2) :-
+play(state(Board, Player, 2)) :-
     writeln('Select the AI level:'),
     writeln('1. Easy'),
     writeln('2. Medium'),
     writeln('3. Hard'),
     read(AILevel),
     play(State, 2, human, AILevel).
+
+play(state(Board, Player, 3)) :-
+    writeln('Select the AI level:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(AILevel),
+    play(State, 2, ai, AILevel).
+
+play(state(Board, Player, 3)) :-
+    play(State, 4, ai1, 1).
 
 play(State, 2, human, 1) :-
     display_game(State),
@@ -311,17 +360,6 @@ play(State, 2, ai, 1) :-
     choose_move(State, easy_ai, Move),
     move(State, Move, NewState),
     play(NewState, 2, human, 1).
-
-play(State, 3) :-
-    writeln('Select the AI level:'),
-    writeln('1. Easy'),
-    writeln('2. Medium'),
-    writeln('3. Hard'),
-    read(AILevel),
-    play(State, 2, ai, AILevel).
-
-play(State, 4) :-
-    play(State, 4, ai1, 1).
 
 play(State, 4, ai1, 1) :-
     display_game(State),
