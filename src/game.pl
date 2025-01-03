@@ -317,4 +317,16 @@ count_stacks(Board, Player, Count) :-
     length(Stacks, Counts).
 
 
+% choose ai moves according to difficulty
+
+% easy -> random
+choose_move(state(Board, Player), easy_ai, Move) :-
+    valid_moves(state(Board, Player), Moves),
+    random_member(Move, Moves).
+
+% medium -> best value achievable in 1 move
+choose_move(state(Board, Player), medium_ai, BestMove) :-
+    valid_moves(state(Board, Player), Moves),
+    setof((Move,Value), NewState^(move(state(Board,Player), Move, NewState), value(NewState, Player, Value) ), MoveValueMap),
+    last(MoveValueMap, (BestMove, _)).
 
