@@ -327,6 +327,13 @@ choose_move(state(Board, Player), easy_ai, Move) :-
 % medium -> best value achievable in 1 move
 choose_move(state(Board, Player), medium_ai, BestMove) :-
     valid_moves(state(Board, Player), Moves),
-    setof((Move,Value), NewState^(move(state(Board,Player), Move, NewState), value(NewState, Player, Value) ), MoveValueMap),
-    last(MoveValueMap, (BestMove, _)).
+    setof((Value, Move), NewState^(move(state(Board,Player), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
+    last(ValueMoveMap, (BestMove, _)).
+
+% hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
+choose_move(state(Board, Player), hard_ai, BestMove) :-
+    valid_moves(state(Board, Player), MyMoves),
+    switch_player(Player, Opponent),
+    findall((MyMove, OpMove), NewState^(move(state(Board,Player), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions),
+    
 
