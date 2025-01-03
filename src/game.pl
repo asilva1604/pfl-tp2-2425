@@ -298,7 +298,7 @@ value(Board, Player, Value) :-
 % > (?) 2 stacks in an uninterrupted line - 2 pts
 
 % NOTE: first condition is only counting regarding lines of 2 single pieces
-% NOTE: may need some weight towards placing single pieces near stacks; otherwise, level 2 AI may be a bit random
+% NOTE: may need some weight towards placing single pieces near stacks; otherwise, level 2 AI may be a bit random (this might be fixed by addressing previous note)
 value(Board, Player, Value) :-
     count_lines_of_two(Board, Player, LineOfTwoSingleCount),
     count_stacks(Board, Player, StackCount),
@@ -315,5 +315,6 @@ count_lines_of_two(Board, Player, Count) :-
 count_stacks(Board, Player, Count) :-
     findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, stack(Player))), Stacks),
     length(Stacks, Counts).
+
 
 
