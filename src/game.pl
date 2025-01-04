@@ -422,6 +422,18 @@ play(state(Board, Player, Mode), 2, ai, 1) :-
     move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
     play(state(Board1, Player1, Mode), 2, human, 1).
 
+play(state(Board, Player, Mode), 2, human, 2) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), human, Move),
+    move(state(Board, Player, Mode), Move, NewState),
+    play(NewState, 2, ai, 2).
+
+play(state(Board, Player, Mode), 2, ai, 2) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), medium_ai, Move),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    play(state(Board1, Player1, Mode), 2, human, 2).
+
 play(state(Board, Player, 4)) :-
     writeln('Select the AI level for AI1:'),
     writeln('1. Easy'),
@@ -491,14 +503,13 @@ count_lines_of_two(Board, Player, Count) :-
 
 count_stacks(Board, Player, Count) :-
     findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, stack(Player))), Stacks),
-    length(Stacks, Counts).
+    length(Stacks, Count).
 
 % medium -> best value achievable in 1 move
 choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), Moves),
     setof((Value, Move), NewState^(move(state(Board,Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
-    last(ValueMoveMap, (BestMove, _)).
-
+    last(ValueMoveMap, (_, BestMove)).
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), MyMoves),
