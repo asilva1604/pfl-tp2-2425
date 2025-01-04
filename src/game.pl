@@ -449,7 +449,6 @@ play(state(Board, Player, Mode), 2, ai, 1) :-
 play(state(Board, Player, Mode), 2, human, 2) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), human, Move),
-    writeln('hello human'),
     move(state(Board, Player, Mode), Move, NewState),
     play(NewState, 2, ai, 2).
 
