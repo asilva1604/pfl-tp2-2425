@@ -69,6 +69,21 @@ writeln(X) :-
     nl.
 
 move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
+    pie_rulable(Board),
+    writeln('Do you want to change color? (y/n)'),
+    read(Response),
+    (Response = 'y' -> switch_player(Player, SwappedPlayer)),
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    replace(Board, Row, Col, SwappedPlayer, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
+    ;   switch_player(SwappedPlayer, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),          % Ensure the position is valid.
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
@@ -76,8 +91,7 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) 
     check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
     (   game_over(state(TempBoard2, Player, Mode), Winner)
     ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
-    ;   switch_player(Player, NextPlayer),       % Switch the player.
-        NewBoard = TempBoard2                   % Set the new board state.
+    ;   switch_player(Player, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
     ).
 
 % Checks for lines of three or more consecutive pieces and handles them.
@@ -424,3 +438,21 @@ play(State, 4, ai2, 1) :-
     choose_move(State, easy_ai, Move),
     move(State, Move, NewState),
     play(NewState, 4, ai1, 1).
+
+pie_rulable(Board) :- one_piece(Board).
+
+one_piece([Head|Tail]) :-      % applies for both Row-Board and Element-Row pairs
+    one_piece(Head),
+    no_piece(Tail).
+one_piece([Head|Tail]) :-
+    no_piece(Head),
+    one_piece(Tail).
+
+one_piece(white).
+one_piece(black).
+
+no_piece([Head|Tail]) :-
+    no_piece(Head),
+    no_piece(Tail).
+no_piece(empty).
+no_piece([]).
