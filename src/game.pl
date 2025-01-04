@@ -533,7 +533,7 @@ count_stacks(Board, Player, Count) :-
 % medium -> best value achievable in 1 move
 choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), Moves),
-    setof((Value, Move), NewState^(move(state(Board,Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
+    setof((Value, Move), NewState^(move(state(Board,Player, Mode), Move, NewState, ai), value(NewState, Player, Value)), ValueMoveMap),
     last(ValueMoveMap, (_, BestMove)).
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
