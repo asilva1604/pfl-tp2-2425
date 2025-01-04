@@ -68,6 +68,42 @@ writeln(X) :-
     write(X),
     nl.
 
+/*
+state(Board, Player, Mode):
+    - Board: current board state;
+    - Player: player that should play make the move;
+    - Mode: H-H, H-AI, AI-H or AI-AI.
+(Row, Col): position where piece is to be added.
+(StackLine, StackPiece):
+    - StackLine: 
+
+*/
+
+% simple place move
+move(state(Board, Player, Mode), (Row, Col), no_stack, no_pie_rule, state(NewBoard, NextPlayer, Mode)) :-
+    valid_position(Board, Row, Col),  % check if position is inside board and empty
+    replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
+    switch_player(Player, NextPlayer).
+
+% apply pie rule and place move
+move(state(Board, Player, Mode), (Row, Col), no_stack, pie_rule, state(NewBoard, Player, Mode)) :-
+    pie_rulable(Board),     % check if pie_rule can be applied
+    switch_player(Player, SwappedPlayer),       % switch color
+    valid_position(Board, Row, Col),  % check if position is inside board and empty
+    replace(Board, Row, Col, SwappedPlayer, NewBoard), % place piece as SwappedPlayer
+
+% place and stack move
+move(state(Board, Player, Mode), (Row, Col), StackMove, no_pie_rule, state(NewBoard, NextPlayer, Mode)) :-
+    valid_position(Board, Row, Col),  % check if position is inside board and empty
+    replace(Board, Row, Col, Player, PieceAddedBoard), % board with added piece in PieceAddedBoard
+    valid_stack(PieceAddedBoard, Player, StackMove),
+    build_stack(PieceAddedBoard, Player, StackMove, NewBoard),
+    switch_player(Player, NextPlayer).
+
+
+
+%---- old moves ------
+
 move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
     pie_rulable(Board),
     writeln('Do you want to change color? (y/n)'),
@@ -540,3 +576,6 @@ choose_move(state(Board, Player), hard_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), MyMoves),
     switch_player(Player, Opponent),
     findall((MyMove, OpMove), NewState^(move(state(Board,Player, Mode), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
+
+choose_move(state(Board, Player, Mode), human, Move) :-
+
