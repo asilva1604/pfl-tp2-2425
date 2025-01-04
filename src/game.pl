@@ -110,7 +110,7 @@ valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     place_in_pos(Board, Player, (R1Row, R1Col)),
     place_in_pos(Board, Player, (R2Row, R2Col)),
 
-    
+    % check if positions are in a line
 
 
 
@@ -345,9 +345,15 @@ find_adjacent_diagonal(Board, Player, Row, Col, RowDir, ColDir, AdjacentCells) :
 switch_player(white, black).
 switch_player(black, white).
 
+/*
 % Generates a list of all valid moves for the current game state.
 valid_moves(state(Board, _, _), Moves) :-
     findall((Row, Col), valid_position(Board, Row, Col), Moves).
+*/
+
+
+valid_moves(state(Board, Player, _), Moves) :-
+    findall((Position, StackMove, PieRule) , move(state(Board, Player, _), Position, StackMove, PieRule, _), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
 valid_position(Board, Row, Col) :-
