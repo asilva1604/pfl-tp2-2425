@@ -83,7 +83,31 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) 
     ;   switch_player(SwappedPlayer, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
     ).
 
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), ai) :-
+    pie_rulable(Board),
+    switch_player(Player, SwappedPlayer),
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    replace(Board, Row, Col, SwappedPlayer, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
+    ;   switch_player(SwappedPlayer, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
 move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
+    ;   switch_player(Player, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), ai) :-
     valid_position(Board, Row, Col),          % Ensure the position is valid.
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
@@ -407,7 +431,7 @@ play(state(Board, Player, Mode), 2, human, 1) :-
 play(state(Board, Player, Mode), 2, ai, 1) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), easy_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
     play(state(Board1, Player1, Mode), 2, human, 1).
 
 play(state(Board, Player, Mode), 2, human, 1) :-
@@ -419,19 +443,21 @@ play(state(Board, Player, Mode), 2, human, 1) :-
 play(state(Board, Player, Mode), 2, ai, 1) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), easy_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
     play(state(Board1, Player1, Mode), 2, human, 1).
 
 play(state(Board, Player, Mode), 2, human, 2) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), human, Move),
+    writeln('hello human'),
     move(state(Board, Player, Mode), Move, NewState),
     play(NewState, 2, ai, 2).
 
 play(state(Board, Player, Mode), 2, ai, 2) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), medium_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    display_game(state(Board1, Player1, Mode1)),
     play(state(Board1, Player1, Mode), 2, human, 2).
 
 play(state(Board, Player, 4)) :-
@@ -450,13 +476,13 @@ play(state(Board, Player, 4)) :-
 play(State, 4, ai1, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState),
+    move(State, Move, NewState, ai),
     play(NewState, 4, ai2, 1).
 
 play(State, 4, ai2, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState),
+    move(State, Move, NewState, ai),
     play(NewState, 4, ai1, 1).
 
 pie_rulable(Board) :- one_piece(Board).
