@@ -90,7 +90,7 @@ move(state(Board, Player, Mode), (Row, Col), no_stack, pie_rule, state(NewBoard,
     pie_rulable(Board),     % check if pie_rule can be applied
     switch_player(Player, SwappedPlayer),       % switch color
     valid_position(Board, Row, Col),  % check if position is inside board and empty
-    replace(Board, Row, Col, SwappedPlayer, NewBoard), % place piece as SwappedPlayer
+    replace(Board, Row, Col, SwappedPlayer, NewBoard). % place piece as SwappedPlayer
 
 % place and stack move
 move(state(Board, Player, Mode), (Row, Col), StackMove, no_pie_rule, state(NewBoard, NextPlayer, Mode)) :-
@@ -99,6 +99,12 @@ move(state(Board, Player, Mode), (Row, Col), StackMove, no_pie_rule, state(NewBo
     valid_stack(PieceAddedBoard, Player, StackMove),
     build_stack(PieceAddedBoard, Player, StackMove, NewBoard),
     switch_player(Player, NextPlayer).
+
+build_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col)), NewBoard) :-
+    replace(Board, SRow, SCol, stack(Player), TempBoard1),
+    replace(TempBoard1, R1Row, R1Col, empty, TempBoard2),
+    replace(TempBoard2, R2Row, R2Col, empty, NewBoard).
+
 
 
 
