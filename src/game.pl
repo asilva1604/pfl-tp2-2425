@@ -74,8 +74,6 @@ state(Board, Player, Mode):
     - Player: player that should play make the move;
     - Mode: H-H, H-AI, AI-H or AI-AI.
 (Row, Col): position where piece is to be added.
-(StackLine, StackPiece):
-    - StackLine: 
 
 */
 
@@ -106,7 +104,20 @@ build_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col)), NewBo
     replace(TempBoard2, R2Row, R2Col, empty, NewBoard).
 
 
+valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
+    % check if all positions are occupied by single pieces of Player color
+    place_in_pos(Board, Player, (SRow, SCol)),
+    place_in_pos(Board, Player, (R1Row, R1Col)),
+    place_in_pos(Board, Player, (R2Row, R2Col)),
 
+    
+
+
+
+% Piece is piece at (Row, Col) position of Board
+piece_in_pos(Board, Piece, (Row, Col)) :-
+    nth1(Row, Board, CurrentRow),
+    nth1(Col, CurrentRow, Piece).
 
 %---- old moves ------
 
