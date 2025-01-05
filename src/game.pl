@@ -378,7 +378,7 @@ valid_moves(state(Board, _, _), Moves) :-
 */
 
 
-valid_moves(state(Board, Player, _), Moves) :-
+valid_moves(state(Board, Player), Moves) :-
     findall(Move , move(state(Board, Player, _), Move, _), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
