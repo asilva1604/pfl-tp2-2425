@@ -78,23 +78,23 @@ state(Board, Player, Mode):
 */
 
 % simple place move
-move(state(Board, Player, Mode), (Row, Col), no_stack, no_pie_rule, state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player, Mode), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
     switch_player(Player, NextPlayer).
 
 % apply pie rule and place move
-move(state(Board, Player, Mode), (Row, Col), no_stack, pie_rule, state(NewBoard, Player, Mode)) :-
+move(state(Board, Player, Mode), ((Row, Col), no_stack, pie_rule), state(NewBoard, Player, Mode)) :-
     pie_rulable(Board),     % check if pie_rule can be applied
     switch_player(Player, SwappedPlayer),       % switch color
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, SwappedPlayer, NewBoard). % place piece as SwappedPlayer
 
 % place and stack move
-move(state(Board, Player, Mode), (Row, Col), StackMove, no_pie_rule, state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player, Mode), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, PieceAddedBoard), % board with added piece in PieceAddedBoard
-    valid_stack(PieceAddedBoard, Player, StackMove),
+    valid_stack(Board, Player, StackMove),
     build_stack(PieceAddedBoard, Player, StackMove, NewBoard),
     switch_player(Player, NextPlayer).
 
@@ -103,7 +103,19 @@ build_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col)), NewBo
     replace(TempBoard1, R1Row, R1Col, empty, TempBoard2),
     replace(TempBoard2, R2Row, R2Col, empty, NewBoard).
 
-
+valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
+    % Ensure the chosen piece is part of a line of three.
+    line_of_three(Board, Player, SRow, SCol, Line),
+    % Ensure the chosen piece is one of the three pieces in the line.
+    member((SRow, SCol), Line),
+    % Ensure the pieces to be removed are also part of the line.
+    member((R1Row, R1Col), Line),
+    member((R2Row, R2Col), Line),
+    % Ensure the chosen piece is not the same as the pieces to be removed.
+    (SRow, SCol) \= (R1Row, R1Col),
+    (SRow, SCol) \= (R2Row, R2Col),
+    (R1Row, R1Col) \= (R2Row, R2Col).
+/*
 valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     % check if all positions are occupied by single pieces of Player color
     place_in_pos(Board, Player, (SRow, SCol)),
@@ -111,6 +123,7 @@ valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     place_in_pos(Board, Player, (R2Row, R2Col)),
 
     % check if positions are in a line
+*/  
 
 
 
@@ -119,7 +132,7 @@ piece_in_pos(Board, Piece, (Row, Col)) :-
     nth1(Row, Board, CurrentRow),
     nth1(Col, CurrentRow, Piece).
 
-%---- old moves ------
+/*---- old moves ------
 
 move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
     pie_rulable(Board),
@@ -170,6 +183,7 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), 
     ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
     ;   switch_player(Player, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
     ).
+*/
 
 % Checks for lines of three or more consecutive pieces and handles them.
 
@@ -180,11 +194,24 @@ check_lines(Board, Player, Row, Col, NewBoard, 4) :-
     ;   NewBoard = Board
     ).
 
+/*
 check_lines(Board, Player, Row, Col, NewBoard, _) :-
     (   line_of_three(Board, Player, Row, Col, Line) ->
         handle_line(Board, Player, Line, NewBoard)
     ;   NewBoard = Board
     ).
+*/
+check_lines(Board, Player, Row, Col, StackMove) :-
+    (   line_of_three(Board, Player, Row, Col, Line) ->
+        handle_line(Board, Player, Line, StackMove)
+    ;   StackMove = no_stack;
+    ).
+
+check_lines(Board, Player, Row, Col, StackMove) :-
+    line_of_three(Board, Player, Row, Col, Linw), !,
+    handle_line(Board, Player, Line, StackMove).
+
+check_lines(Board, Player, Row, Col, no_stack).
 
 
 
@@ -345,7 +372,7 @@ valid_moves(state(Board, _, _), Moves) :-
 
 
 valid_moves(state(Board, Player, _), Moves) :-
-    findall((Position, StackMove, PieRule) , move(state(Board, Player, _), Position, StackMove, PieRule, _), Moves).
+    findall(Move , move(state(Board, Player, _), Move, _), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
 valid_position(Board, Row, Col) :-
@@ -421,6 +448,7 @@ sublist_of_three(List, Elem) :-
 board_full(Board) :-
     \+ (member(Row, Board), member(empty, Row)).
 
+/*
 choose_move(state(Board, white, _), human, Move) :-
     writeln('Your colour is white. Enter your move:'),
     writeln('Enter your move row:'),
@@ -436,6 +464,7 @@ choose_move(state(Board, black, _), human, Move) :-
     writeln('Enter your move column:'),
     read(Col),
     Move = (Row, Col).
+*/
 
 choose_move(state(Board, Player, Mode), easy_ai, Move) :-
     valid_moves(state(Board, Player, Mode), Moves),
@@ -584,8 +613,9 @@ count_stacks(Board, Player, Count) :-
 % medium -> best value achievable in 1 move
 choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), Moves),
-    setof((Value, Move), NewState^(move(state(Board,Player, Mode), Move, NewState, ai), value(NewState, Player, Value)), ValueMoveMap),
+    setof((Value, Move), NewState^(move(state(Board, Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
     last(ValueMoveMap, (_, BestMove)).
+
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), MyMoves),
@@ -593,8 +623,55 @@ choose_move(state(Board, Player), hard_ai, BestMove) :-
     findall((MyMove, OpMove), NewState^(move(state(Board,Player, Mode), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
 
 
+ask_place(Position) :-
+    writeln('Enter your move row:'),
+    read(Row),
+    writeln('Enter your move column:'),
+    read(Col),
+    Position = (Row, Col).
+
+ask_pie_rule(PieRule) :-
+    writeln('Would you like to apply the pie rule? (y/n)'),
+    read(Answer),
+    pie_rule_answer(Answer, PieRule).
+
+pie_rule_answer(y, pie_rule).
+pie_rule_answer(n, no_pie_rule).
+
+
+ask_build_stack(StackMove) :-
+    writeln('Would you like to build a stack? (y/n)'),
+    read(Answer),
+    ask_stack_move(Answer, StackMove).
+
+ask_stack_move(n, no_stack).
+
+ask_stack_move(y, StackMove) :-
+    writeln('Enter your stack row:'),
+    read(SRow),
+    writeln('Enter your stack column:'),
+    read(SCol),
+    SPos = (SRow, SCol),
+
+    writeln('Enter your first to remove piece row:'),
+    read(R1Row),
+    writeln('Enter your first to remove piece column:'),
+    read(R1Col),
+    R1Pos = (R1Row, R1Col),
+
+    writeln('Enter your second to remove piece row:'),
+    read(R2Row),
+    writeln('Enter your second to remove piece column:'),
+    read(R2Col),
+    R2Pos = (R2Row, R2Col),
+
+    StackMove = (SPos, R1Pos, R2Pos).
+
 
 
 choose_move(state(Board, Player, Mode), human, Move) :-
-
+    ask_pie_rule(PieRule),
+    ask_place(Position),
+    ask_build_stack(StackMove),
+    Move = (Position, StackMove, PieRule).
 
