@@ -40,9 +40,9 @@ near_final_state(GameState) :-
         [stack(white), stack(white), white, empty, empty, empty, empty],
         [empty, empty, empty, empty, empty, empty, empty],
         [empty, empty, white, empty, empty, empty, empty],
-        [empty, empty, empty, empty, black, empty, black],
-        [empty, empty, empty, empty, empty, stack(black), empty],
-        [empty, empty, empty, empty, empty, stack(black), empty],
+        [empty, empty, empty, empty, empty, empty, black],
+        [empty, empty, empty, empty, empty, empty, black],
+        [empty, empty, empty, empty, stack(black), stack(black), empty],
         [empty, empty, empty, empty, empty, empty, empty]
     ],
     GameState = state(Board, white).
@@ -50,6 +50,6 @@ near_final_state(GameState) :-
 % Start game from near-final state 1
 start_near_final_state :-
     near_final_state(GameState),
-    play(GameState).
+    game_loop((player2, human, human), GameState, _).
 
 
