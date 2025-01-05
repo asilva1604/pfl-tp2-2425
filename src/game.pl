@@ -406,7 +406,7 @@ replace_in_row([Col|RestCols], ColIndex, Elem, [Col|NewRestCols]) :-
 
 
 % Determines if the game is over and declares the winner.
-game_over(state(Board, _, _), Winner) :-
+game_over(state(Board, _), Winner) :-
     (   winning_line(Board, stack(white)) -> Winner = white
     ;   winning_line(Board, stack(black)) -> Winner = black
     ;   board_full(Board) -> Winner = draw
