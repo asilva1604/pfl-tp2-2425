@@ -11,7 +11,7 @@ This group (LOT_1) is constituted by, and each member's respective contribution 
 - Sofia Alexandra Mesquita Carvalho de Sousa - 5%
 
 
-Even though our group is of 3 people, we were not able to implement the features specific to this group size, as one of the members did not contribute to the coding part of the project, only having contributed towards this Readme file.
+Even though our group is of 3 people, we were not able to fully implement the features specific to this group size, as one of the members did not contribute to the coding part of the project, only having contributed towards this Readme file.
 
 Our group's chosen game was LOT.
 
@@ -99,6 +99,7 @@ Final game state:
 
 ### Move Representation
 
+A move in the game is represented as a tuple ((Row,Col),MoveType,PieRuleFlag), where (Row,Col) specifies the board coordinates for the move, MoveType indicates whether the move involves placing a single piece (no_stack) or stacking pieces (StackMove), and PieRuleFlag denotes whether the pie rule is applied (pie_rule) or not (no_pie_rule). The move/3 predicate uses this representation to transition the game state by validating the move's legality, updating the board, and determining the next player. For standard moves, a piece is placed at the specified coordinates, and for stacking moves, additional validations and updates are performed to build the stack. If the pie rule is invoked, the current player's color is swapped, and a piece is placed using the new color. This structured representation ensures clarity and flexibility in handling different move types and game rules.
 
 ### User Interaction
 
@@ -108,9 +109,14 @@ The game features a menu-driven system to guide the user through various options
 
 Our interpretation of the pie rule is that the second player (black) may choose to swap colours to white. After doing this, he places a white piece. But this rule is open to interpretation, and another interpretation could be that after choosing to swap colour, he skips this turn.
 
-This project still has some rough edges, and is not completely error-ridden. Some of the known bugs are:
+The minimax algorithm was not fully implemented, as it did not correctly work. There probably was a small error that we could not find.
 
-In the future, a better algorithm could be implemented for a higher level of AI (min-max), and alternative rules could also be implemented.
+This project still has some rough edges, and is not completely error-ridden. Some of the known bugs are:
+- Diagonals of stacks that go from bottom to up, left to right, are not detected as win conditions.
+- Sometimes the game crashes with wrong input
+- In the easy mode, the plays do not seem completely random, but the reason for this seems oblivious to us.
+
+In the future, a better algorithm could be implemented for a higher level of AI (minimax), and alternative rules could also be implemented.
 
 ## Bibliography
 
