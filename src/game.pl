@@ -8,24 +8,9 @@
 % GameConfig: Contains additional configuration options if needed (e.g., future extensions).
 % GameState: The initial state of the game.
 
-initial_state((Size, 1), GameState) :-
+initial_state(Size, GameState) :-
     create_board(Size, Board),
-    GameState = state(Board, white, 1).
-
-initial_state((Size, 2), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 2).
-
-initial_state((Size, 3), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 3).
-
-initial_state((Size, 4), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 4).
+    GameState = state(Board, white).
     
 % Helper predicate to create an empty board of a given size.
 create_board(Size, Board) :-
@@ -38,8 +23,9 @@ create_row(Size, Row) :-
     maplist(=(empty), Row).             % Initialize all cells to 'empty'.
 
 % Displays the current game state: the board and the current player.
-display_game(state(Board, Player, _)) :-
-    write('Current player: '), writeln(Player),
+display_game((CurrPlayer, _, _), state(Board, Color)) :-
+    write('Current player: '), writeln(CurrPlayer),
+    write('Playing for color: '), writeln(Color),
     write('  1   2   3   4   5   6   7  '), nl, % Column headers
     display_rows(Board, 1).
 
@@ -79,7 +65,7 @@ state(Board, Player, Mode):
 */
 
 % simple place move
-move(state(Board, Player, Mode), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
     findall(1, valid_stack(NewBoard, Player, _), StacksFound),
@@ -87,14 +73,14 @@ move(state(Board, Player, Mode), ((Row, Col), no_stack, no_pie_rule), state(NewB
     switch_player(Player, NextPlayer).
 
 % apply pie rule and place move
-move(state(Board, Player, Mode), ((Row, Col), no_stack, pie_rule), state(NewBoard, Player, Mode)) :-
+move(state(Board, Player), ((Row, Col), no_stack, pie_rule), state(NewBoard, Player)) :-
     pie_rulable(Board),     % check if pie_rule can be applied
     switch_player(Player, SwappedPlayer),       % switch color
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, SwappedPlayer, NewBoard). % place piece as SwappedPlayer
 
 % place and stack move
-move(state(Board, Player, Mode), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, PieceAddedBoard), % board with added piece in PieceAddedBoard
     valid_stack(PieceAddedBoard, Player, StackMove),
@@ -393,8 +379,8 @@ valid_moves(state(Board, _, _), Moves) :-
 */
 
 
-valid_moves(state(Board, Player, _), Moves) :-
-    findall(Move , move(state(Board, Player, _), Move, _), Moves).
+valid_moves(state(Board, Player), Moves) :-
+    findall(Move , move(state(Board, Player), Move, _), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
 valid_position(Board, Row, Col) :-
@@ -421,7 +407,7 @@ replace_in_row([Col|RestCols], ColIndex, Elem, [Col|NewRestCols]) :-
 
 
 % Determines if the game is over and declares the winner.
-game_over(state(Board, _, _), Winner) :-
+game_over(state(Board, _), Winner) :-
     (   winning_line(Board, stack(white)) -> Winner = white
     ;   winning_line(Board, stack(black)) -> Winner = black
     ;   board_full(Board) -> Winner = draw
@@ -488,20 +474,78 @@ choose_move(state(Board, black, _), human, Move) :-
     Move = (Row, Col).
 */
 
-choose_move(state(Board, Player, Mode), easy_ai, Move) :-
-    valid_moves(state(Board, Player, Mode), Moves),
+choose_move(state(Board, Player), easy_ai, Move) :-
+    valid_moves(state(Board, Player), Moves),
     random_member(Move, Moves).
 
-play :-
+get_gamemode(Gamemode) :-
     writeln('Welcome to LOT! Enter the desired game mode'),
     writeln('1. Human vs Human'),
     writeln('2. Human vs AI'),
     writeln('3. AI vs Human'),
     writeln('4. AI vs AI'),
-    read(GameMode),
-    initial_state((7, GameMode), State),
-    play(State).
+    read(Number),
+    gamemode_number(Number, Gamemode).
 
+gamemode_number(1, h-h).
+gamemode_number(2, h-pc).
+gamemode_number(3, pc-h).
+gamemode_number(4, pc-pc).
+
+
+get_settings(First-Second, (player1, PType1, PType2)) :-
+    get_settings(First, PType1),
+    get_settings(Second, PType2).
+
+get_settings(h, human).
+
+get_settings(pc, Difficulty) :-
+    writeln('Select the AI level:'),
+    writeln('1. Easy'),
+    writeln('2. Medium'),
+    writeln('3. Hard'),
+    read(Number),
+    difficulty_number(Number, Difficulty).
+
+difficulty_number(1, easy_ai).
+difficulty_number(2, medium_ai).
+difficulty_number(3, hard_ai).
+
+
+display_winner((Player, _, _), WinnerColor) :-
+    write(Player), write(' won as color '), write(WinnerColor), writeln('!!!').
+
+play :-
+    get_gamemode(Gamemode),
+    initial_state(7, GameState),
+    get_settings(Gamemode, MatchState),
+    game_loop(MatchState, GameState, Winner),
+    display_winner(MatchState, Winner).
+
+game_loop(_, GameState, Winner) :-
+    game_over(GameState, Winner),
+    !.
+
+game_loop((player1, PType1, PType2), GameState, Winner) :- 
+    display_game((player1, _, _), GameState),
+    \+ game_over(GameState, Winner),
+    choose_move(GameState, PType1, Move),
+    move(GameState, Move, NewGameState),
+    game_loop((player2, PType1, PType2), NewGameState, Winner).
+
+game_loop((player2, PType1, PType2), GameState, Winner) :- 
+    display_game((player2, _, _), GameState),
+    \+ game_over(GameState, Winner),
+    choose_move(GameState, PType2, Move),
+    move(GameState, Move, NewGameState),
+    game_loop((player1, PType1, PType2), NewGameState, Winner).
+
+
+
+
+
+
+/*
 play(state(Board, Player, 1)) :-
     display_game(state(Board, Player, 1)),
     choose_move(state(Board, Player, 1), human, Move),
@@ -586,6 +630,8 @@ play(State, 4, ai2, 1) :-
     move(State, Move, NewState),
     play(NewState, 4, ai1, 1).
 
+*/
+
 pie_rulable(Board) :- one_piece(Board).
 
 one_piece([Head|Tail]) :-      % applies for both Row-Board and Element-Row pairs
@@ -605,9 +651,13 @@ no_piece(empty).
 no_piece([]).
 
 % if board results in game win, assign it max value
-value(Board, Player, Value) :-
-    game_over(state(Board, Player), Player),
-    Value is 999, !.
+value(Board, Player, 999) :-
+    game_over(state(Board, Player), Player).
+
+% losing must be worse than win
+value(Board, Player, -999) :-
+    switch_player(Player, Opponent),
+    game_over(state(Board, Player), Opponent).
 
 % favorable conditions heuristics
 % > any single piece on the board - 0 pts - as both players are always obliged to place one
@@ -633,16 +683,16 @@ count_stacks(Board, Player, Count) :-
     length(Stacks, Count).
 
 % medium -> best value achievable in 1 move
-choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
-    valid_moves(state(Board, Player, Mode), Moves),
-    setof((Value, Move), NewState^(move(state(Board, Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
+choose_move(state(Board, Player), medium_ai, BestMove) :-
+    valid_moves(state(Board, Player), Moves),
+    setof((Value, Move), NewState^(move(state(Board, Player), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
     last(ValueMoveMap, (_, BestMove)).  % last has the highest value since setof sorts elements
 
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
-    valid_moves(state(Board, Player, Mode), MyMoves),
+    valid_moves(state(Board, Player), MyMoves),
     switch_player(Player, Opponent),
-    findall((MyMove, OpMove), NewState^(move(state(Board,Player, Mode), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
+    findall((MyMove, OpMove), NewState^(move(state(Board,Player), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
 
 
 ask_place(Position) :-
@@ -691,7 +741,7 @@ ask_stack_move(y, StackMove) :-
 
 
 
-choose_move(state(Board, Player, Mode), human, Move) :-
+choose_move(state(Board, Player), human, Move) :-
     ask_pie_rule(PieRule),
     ask_place(Position),
     ask_build_stack(StackMove),
