@@ -7,24 +7,9 @@
 % GameConfig: Contains additional configuration options if needed (e.g., future extensions).
 % GameState: The initial state of the game.
 
-initial_state((Size, 1), GameState) :-
+initial_state(Size, GameState) :-
     create_board(Size, Board),
-    GameState = state(Board, white, 1).
-
-initial_state((Size, 2), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 2).
-
-initial_state((Size, 3), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 3).
-
-initial_state((Size, 4), GameState) :-
-    create_board(Size, Board),
-    % Define the initial game state.
-    GameState = state(Board, white, 4).
+    GameState = state(Board, white).
     
 % Helper predicate to create an empty board of a given size.
 create_board(Size, Board) :-
@@ -491,15 +476,25 @@ choose_move(state(Board, Player, Mode), easy_ai, Move) :-
     valid_moves(state(Board, Player, Mode), Moves),
     random_member(Move, Moves).
 
-play :-
+get_gamemode(Gamemode) :-
     writeln('Welcome to LOT! Enter the desired game mode'),
     writeln('1. Human vs Human'),
     writeln('2. Human vs AI'),
     writeln('3. AI vs Human'),
     writeln('4. AI vs AI'),
-    read(GameMode),
-    initial_state((7, GameMode), State),
-    play(State).
+    read(Number),
+    gamemode_number(Number, Gamemode).
+
+gamemode_number(1, h-h).
+gamemode_number(2, h-pc).
+gamemode_number(3, pc-h).
+gamemode_number(4, pc-pc).
+
+
+play :-
+    get_gamemode(Gamemode),
+    initial_state(7, GameState),
+    get_settings(Gamemode, MatchState).
 
 play(state(Board, Player, 1)) :-
     display_game(state(Board, Player, 1)),
