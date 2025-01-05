@@ -9,7 +9,7 @@ intermediate_state_1(GameState) :-
         [empty, empty, empty, empty, empty, empty, empty],
         [empty, empty, empty, empty, empty, empty, empty]
     ],
-    GameState = state(Board, white, 1).
+    GameState = state(Board, white).
 
 % Start game from intermediate state 1
 start_intermediate_state_1 :-
@@ -27,7 +27,7 @@ intermediate_state_2(GameState) :-
         [empty, empty, empty, empty, empty, empty, empty],
         [empty, empty, empty, empty, empty, empty, empty]
     ],
-    GameState = state(Board, black, 1).
+    GameState = state(Board, black).
 
 % Start game from intermediate state 2
 start_intermediate_state_2 :-
@@ -45,7 +45,7 @@ near_final_state(GameState) :-
         [empty, empty, empty, empty, empty, stack(black), empty],
         [empty, empty, empty, empty, empty, empty, empty]
     ],
-    GameState = state(Board, white, 1).
+    GameState = state(Board, white).
 
 % Start game from near-final state 1
 start_near_final_state :-
