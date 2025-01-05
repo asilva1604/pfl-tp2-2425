@@ -69,6 +69,14 @@ To make the game harder, one could do the opposite, to make the pieces to make a
 
 ## Game Logic
 
+To test the game, you can use the following included predicates:
+
+```
+start_intermediate_state_1.
+start_intermediate_state_2
+start_near_final_state
+```
+
 ### Game Configuration Representation
 
 To represent the game internally, we use a State. This is composed by the current board, the current player, and the current game mode. The current board is a a list with X sublists, who have X items, with X being the size of the board. Each item can be an empty space, a white piece, a black piece, or a stack of white or black pieces. The current player is either white, or black. The game mode is a number from 1 to 4, with each being, respectively, Human-Human, Human-AI, AI-Human, AI-AI. The initial_state/2 predicate takes a GameConfig, which is a tuple of (Size, GameMode), and it "returns" a GameState, of the type we have previously mentioned. 
