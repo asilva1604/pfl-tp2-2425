@@ -79,11 +79,11 @@ start_near_final_state
 
 ### Game Configuration Representation
 
-To represent the game internally, we use a State. This is composed by the current board, the current player, and the current game mode. The current board is a a list with X sublists, who have X items, with X being the size of the board. Each item can be an empty space, a white piece, a black piece, or a stack of white or black pieces. The current player is either white, or black. The game mode is a number from 1 to 4, with each being, respectively, Human-Human, Human-AI, AI-Human, AI-AI. The initial_state/2 predicate takes a GameConfig, which is a tuple of (Size, GameMode), and it "returns" a GameState, of the type we have previously mentioned. 
+To represent the game configuration, we simply have the board size, which is usually 7 for this game.
 
 ### Internal Game State Representation
 
-The game configuration represents the static properties required to define the game setup, such as the board size, initial piece arrangement, and the number of players. Internally, this is stored using structured data like lists or tuples, which are passed to the initial_state/2 predicate to generate the initial game state. The game state itself captures dynamic information, including the current board layout, active player, and game mode, using a compound term like state(Board, Player, Mode). Moves are represented as structured terms, such as move(X, Y), denoting the transition of a piece from one position to another, and are validated and applied by the move/3 predicate. User interaction is facilitated through a menu-driven system, ensuring clear communication and a seamless user experience.
+To represent the game internally, we use a GameState and a MatchState. The GameState is composed by the current board and the current player. The current board is a a list with X sublists, who have X items, with X being the size of the board. Each item can be an empty space, a white piece, a black piece, or a stack of white or black pieces. The current player is either white, or black.  The initial_state/2 predicate takes a GameConfig, which is just the size of the board, and it "returns" a GameState, of the type we have previously mentioned. The MatchState is a tuple of (Current Player, Player 1 Type, Player 2 Type), with the player type taking the value of human, easy_ai, medium_ai or hard_ai. 
 
 Initial game state:
 
