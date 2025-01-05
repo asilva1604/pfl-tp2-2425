@@ -14,7 +14,7 @@ intermediate_state_1(GameState) :-
 % Start game from intermediate state 1
 start_intermediate_state_1 :-
     intermediate_state_1(GameState),
-    play(GameState).
+    game_loop((player2, human, human), GameState, Winner), display_winner(MatchState, Winner).
 
 % Intermediate game state 2
 intermediate_state_2(GameState) :-
@@ -32,7 +32,7 @@ intermediate_state_2(GameState) :-
 % Start game from intermediate state 2
 start_intermediate_state_2 :-
     intermediate_state_2(GameState),
-    play(GameState).
+    game_loop((player2, human, human), GameState, Winner), display_winner(MatchState, Winner).
 
 % Near-final game state 1
 near_final_state(GameState) :-
@@ -50,6 +50,4 @@ near_final_state(GameState) :-
 % Start game from near-final state 1
 start_near_final_state :-
     near_final_state(GameState),
-    game_loop((player2, human, human), GameState, _).
-
-
+    game_loop((player2, human, human), GameState, Winner), display_winner(MatchState, Winner).
