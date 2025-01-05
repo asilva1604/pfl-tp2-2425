@@ -4,10 +4,10 @@
 :- consult('game_states.pl').
 
 
+% initial_state(+GameConfig, -GameState)
 % Initializes the game state for LOT.
 % GameConfig: Contains additional configuration options if needed (e.g., future extensions).
 % GameState: The initial state of the game.
-
 initial_state(Size, GameState) :-
     create_board(Size, Board),
     GameState = state(Board, white).
@@ -22,7 +22,9 @@ create_row(Size, Row) :-
     length(Row, Size),                  % Create a list of cells.
     maplist(=(empty), Row).             % Initialize all cells to 'empty'.
 
+% display_game(+GameState)
 % Displays the current game state: the board and the current player.
+% GameState : The current state of the game.
 display_game((CurrPlayer, _, _), state(Board, Color)) :-
     write('Current player: '), writeln(CurrPlayer),
     write('Playing for color: '), writeln(Color),
@@ -55,7 +57,11 @@ writeln(X) :-
     write(X),
     nl.
 
-% simple place move
+% move(+GameState, +Move, -NewGameState)
+% Executes a move in the game.
+% GameState: The current state of the game.
+% Move: The move to be executed.
+% NewGameState: The new state of the game after the move.
 move(state(Board, Player), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
@@ -303,13 +309,10 @@ find_adjacent_diagonal(Board, Player, Row, Col, RowDir, ColDir, AdjacentCells) :
 switch_player(white, black).
 switch_player(black, white).
 
-/*
-% Generates a list of all valid moves for the current game state.
-valid_moves(state(Board, _, _), Moves) :-
-    findall((Row, Col), valid_position(Board, Row, Col), Moves).
-*/
-
-
+% valid_moves(+GameState, -ListOfMoves)
+% Finds all valid moves for the current player.
+% GameState: The current state of the game.
+% ListOfMoves: The list of valid moves for the current player.
 valid_moves(state(Board, Player), Moves) :-
     findall(Move , move(state(Board, Player), Move, _), Moves).
 
@@ -337,7 +340,10 @@ replace_in_row([Col|RestCols], ColIndex, Elem, [Col|NewRestCols]) :-
     replace_in_row(RestCols, NewColIndex, Elem, NewRestCols).
 
 
+% game_over(+GameState, -Winner)
 % Determines if the game is over and declares the winner.
+% GameState: The current state of the game.
+% Winner: The winner of the game (white, black, or draw).
 game_over(state(Board, _), Winner) :-
     (   winning_line(Board, stack(white)) -> Winner = white
     ;   winning_line(Board, stack(black)) -> Winner = black
@@ -386,24 +392,6 @@ sublist_of_three(List, Elem) :-
 % Checks if the board is full (no empty cells).
 board_full(Board) :-
     \+ (member(Row, Board), member(empty, Row)).
-
-/*
-choose_move(state(Board, white, _), human, Move) :-
-    writeln('Your colour is white. Enter your move:'),
-    writeln('Enter your move row:'),
-    read(Row),
-    writeln('Enter your move column:'),
-    read(Col),
-    Move = (Row, Col).
-
-choose_move(state(Board, black, _), human, Move) :-
-    writeln('Your colour is black. Enter your move:'),
-    writeln('Enter your move row:'),
-    read(Row),
-    writeln('Enter your move column:'),
-    read(Col),
-    Move = (Row, Col).
-*/
 
 get_gamemode(Gamemode) :-
     writeln('Welcome to LOT! Enter the desired game mode'),
@@ -502,6 +490,11 @@ value(Board, Player, -999) :-
 
 % NOTE: first condition is only counting regarding lines of 2 single pieces
 % NOTE: may need some weight towards placing single pieces near stacks; otherwise, level 2 AI may be a bit random (this might be fixed by addressing previous note)
+% value(+GameState, +Player, -Value)
+% Calculates the value of the game state for the given player.
+% GameState: The current state of the game.
+% Player: The player for whom the value is calculated.
+% Value: The value of the game state for the given player.
 value(Board, Player, Value) :-
     count_lines_of_two(Board, Player, LineOfTwoSingleCount),
     count_stacks(Board, Player, StackCount),
@@ -517,7 +510,11 @@ count_stacks(Board, Player, Count) :-
     findall(1, (nth1(_, Board, CurrentRow),  nth1(_, CurrentRow, stack(Player))), Stacks),
     length(Stacks, Count).
 
-
+% choose_move(+GameState, +Level, -Move)
+% Chooses a move for the given level of AI, or for a human.
+% GameState: The current state of the game.
+% Level: The level of the AI (easy_ai, medium_ai, hard_ai), or human.
+% Move: The chosen move.
 choose_move(state(Board, Player), easy_ai, Move) :-
     valid_moves(state(Board, Player), Moves),
     random_member(Move, Moves).
