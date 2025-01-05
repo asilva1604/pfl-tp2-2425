@@ -1,0 +1,55 @@
+% Intermediate game state 1
+intermediate_state_1(GameState) :-
+    Board = [
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, white, empty, empty, empty, empty],
+        [empty, black, empty, white, empty, empty, empty],
+        [empty, empty, empty, empty, black, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty]
+    ],
+    GameState = state(Board, white, 1).
+
+% Start game from intermediate state 1
+start_intermediate_state_1 :-
+    intermediate_state_1(GameState),
+    play(GameState).
+
+% Intermediate game state 2
+intermediate_state_2(GameState) :-
+    Board = [
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, white, white, empty, empty, empty, empty],
+        [empty, black, empty, white, empty, empty, empty],
+        [empty, empty, black, empty, black, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty]
+    ],
+    GameState = state(Board, black, 1).
+
+% Start game from intermediate state 2
+start_intermediate_state_2 :-
+    intermediate_state_2(GameState),
+    play(GameState).
+
+% Near-final game state 1
+near_final_state(GameState) :-
+    Board = [
+        [stack(white), stack(white), white, empty, empty, empty, empty],
+        [empty, empty, empty, empty, empty, empty, empty],
+        [empty, empty, white, empty, empty, empty, empty],
+        [empty, empty, empty, empty, black, empty, black],
+        [empty, empty, empty, empty, empty, stack(black), empty],
+        [empty, empty, empty, empty, empty, stack(black), empty],
+        [empty, empty, empty, empty, empty, empty, empty]
+    ],
+    GameState = state(Board, white, 1).
+
+% Start game from near-final state 1
+start_near_final_state :-
+    near_final_state(GameState),
+    play(GameState).
+
+
