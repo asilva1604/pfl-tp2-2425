@@ -172,29 +172,21 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), 
     ).
 
 % Checks for lines of three or more consecutive pieces and handles them.
-check_lines(Board, Player, Row, Col, NewBoard, 1) :-
-    (   line_of_three(Board, Player, Row, Col, Line) ->
-        handle_line(Board, Player, Line, NewBoard)
-    ;   NewBoard = Board
-    ).
-
-check_lines(Board, Player, Row, Col, NewBoard, 2) :-
-    (   line_of_three(Board, Player, Row, Col, Line) ->
-        handle_line(Board, Player, Line, NewBoard)
-    ;   NewBoard = Board
-    ).
-
-check_lines(Board, Player, Row, Col, NewBoard, 3) :-
-    (   line_of_three(Board, Player, Row, Col, Line) ->
-        handle_line(Board, Player, Line, NewBoard)
-    ;   NewBoard = Board
-    ).
 
 check_lines(Board, Player, Row, Col, NewBoard, 4) :-
+    !,
     (   line_of_three(Board, Player, Row, Col, Line) ->
         handle_line_ai(Board, Player, Line, NewBoard)
     ;   NewBoard = Board
     ).
+
+check_lines(Board, Player, Row, Col, NewBoard, _) :-
+    (   line_of_three(Board, Player, Row, Col, Line) ->
+        handle_line(Board, Player, Line, NewBoard)
+    ;   NewBoard = Board
+    ).
+
+
 
 % Handles a line of three or more pieces by asking the user which piece to keep as the stack.
 handle_line(Board, Player, Line, NewBoard) :-
@@ -600,5 +592,9 @@ choose_move(state(Board, Player), hard_ai, BestMove) :-
     switch_player(Player, Opponent),
     findall((MyMove, OpMove), NewState^(move(state(Board,Player, Mode), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
 
+
+
+
 choose_move(state(Board, Player, Mode), human, Move) :-
+
 
