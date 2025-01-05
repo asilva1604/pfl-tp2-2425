@@ -83,7 +83,31 @@ move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) 
     ;   switch_player(SwappedPlayer, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
     ).
 
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), ai) :-
+    pie_rulable(Board),
+    switch_player(Player, SwappedPlayer),
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    replace(Board, Row, Col, SwappedPlayer, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
+    ;   switch_player(SwappedPlayer, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
 move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode)) :-
+    valid_position(Board, Row, Col),          % Ensure the position is valid.
+    nth1(Row, Board, CurrentRow),            % Get the target row.
+    nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
+    replace(Board, Row, Col, Player, TempBoard), % Update the board with the player's piece.
+    check_lines(TempBoard, Player, Row, Col, TempBoard2, Mode), % Check for lines of three and handle them.
+    (   game_over(state(TempBoard2, Player, Mode), Winner)
+    ->  format('Game over! Winner: ~w~n', [Winner]), display_game(state(TempBoard2, Player, Mode)),!, fail
+    ;   switch_player(Player, NextPlayer), NewBoard = TempBoard2                   % Set the new board state.
+    ).
+
+move(state(Board, Player, Mode), (Row, Col), state(NewBoard, NextPlayer, Mode), ai) :-
     valid_position(Board, Row, Col),          % Ensure the position is valid.
     nth1(Row, Board, CurrentRow),            % Get the target row.
     nth1(Col, CurrentRow, empty),            % Ensure the target cell is empty.
@@ -362,12 +386,8 @@ choose_move(state(Board, black, _), human, Move) :-
     read(Col),
     Move = (Row, Col).
 
-choose_move(state(Board, white, Mode), easy_ai, Move) :-
-    valid_moves(state(Board, white, Mode), Moves),
-    random_member(Move, Moves).
-
-choose_move(state(Board, black, Mode), easy_ai, Move) :-
-    valid_moves(state(Board, black, Mode), Moves),
+choose_move(state(Board, Player, Mode), easy_ai, Move) :-
+    valid_moves(state(Board, Player, Mode), Moves),
     random_member(Move, Moves).
 
 play :-
@@ -411,8 +431,33 @@ play(state(Board, Player, Mode), 2, human, 1) :-
 play(state(Board, Player, Mode), 2, ai, 1) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), easy_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
     play(state(Board1, Player1, Mode), 2, human, 1).
+
+play(state(Board, Player, Mode), 2, human, 1) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), human, Move),
+    move(state(Board, Player, Mode), Move, NewState),
+    play(NewState, 2, ai, 1).
+
+play(state(Board, Player, Mode), 2, ai, 1) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), easy_ai, Move),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    play(state(Board1, Player1, Mode), 2, human, 1).
+
+play(state(Board, Player, Mode), 2, human, 2) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), human, Move),
+    move(state(Board, Player, Mode), Move, NewState),
+    play(NewState, 2, ai, 2).
+
+play(state(Board, Player, Mode), 2, ai, 2) :-
+    display_game(state(Board, Player, Mode)),
+    choose_move(state(Board, Player, Mode), medium_ai, Move),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    display_game(state(Board1, Player1, Mode1)),
+    play(state(Board1, Player1, Mode), 2, human, 2).
 
 play(state(Board, Player, 4)) :-
     writeln('Select the AI level for AI1:'),
@@ -430,13 +475,13 @@ play(state(Board, Player, 4)) :-
 play(State, 4, ai1, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState),
+    move(State, Move, NewState, ai),
     play(NewState, 4, ai2, 1).
 
 play(State, 4, ai2, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState),
+    move(State, Move, NewState, ai),
     play(NewState, 4, ai1, 1).
 
 pie_rulable(Board) :- one_piece(Board).
@@ -456,3 +501,42 @@ no_piece([Head|Tail]) :-
     no_piece(Tail).
 no_piece(empty).
 no_piece([]).
+
+% if board results in game win, assign it max value
+value(Board, Player, Value) :-
+    game_over(state(Board, Player), Player),
+    Value is 999, !.
+
+% favorable conditions heuristics
+% > any single piece on the board - 0 pts - as both players are always obliged to place one
+% > 2 pieces (either single or stack) in an uninterrupted line - 1 pt
+% > 1 stack - 4 pts - so as to be larger than the maximum pts one board can achieve greater than the previous by placing a piece that doesn't make a stack
+% > (?) 2 stacks in an uninterrupted line - 2 pts
+
+% NOTE: first condition is only counting regarding lines of 2 single pieces
+% NOTE: may need some weight towards placing single pieces near stacks; otherwise, level 2 AI may be a bit random (this might be fixed by addressing previous note)
+value(Board, Player, Value) :-
+    count_lines_of_two(Board, Player, LineOfTwoSingleCount),
+    count_stacks(Board, Player, StackCount),
+    count_lines_of_two(Board, stack(Player), LineOfTwoStackCount),
+    Value is LineOfTwoSingleCount + StackCount*4 + LineOfTwoStackCount*2.
+
+% counts lines of 2 uninterrupted (by opposite color) pieces (stack or single) of Player color
+count_lines_of_two(Board, Player, Count) :-
+    findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, empty), line_of_three(Board, Player, CurrentRow, Col, _)), FavorableCells),
+    length(FavorableCells, Count).
+
+count_stacks(Board, Player, Count) :-
+    findall(1, (nth1(Row, Board, CurrentRow),  nth1(Col, CurrentRow, stack(Player))), Stacks),
+    length(Stacks, Count).
+
+% medium -> best value achievable in 1 move
+choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
+    valid_moves(state(Board, Player, Mode), Moves),
+    setof((Value, Move), NewState^(move(state(Board,Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
+    last(ValueMoveMap, (_, BestMove)).
+% hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
+choose_move(state(Board, Player), hard_ai, BestMove) :-
+    valid_moves(state(Board, Player, Mode), MyMoves),
+    switch_player(Player, Opponent),
+    findall((MyMove, OpMove), NewState^(move(state(Board,Player, Mode), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
