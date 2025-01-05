@@ -64,7 +64,7 @@ state(Board, Player, Mode):
 */
 
 % simple place move
-move(state(Board, Player), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
     findall(1, valid_stack(NewBoard, Player, _), StacksFound),
@@ -72,14 +72,14 @@ move(state(Board, Player), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, 
     switch_player(Player, NextPlayer).
 
 % apply pie rule and place move
-move(state(Board, Player), ((Row, Col), no_stack, pie_rule), state(NewBoard, Player, Mode)) :-
+move(state(Board, Player), ((Row, Col), no_stack, pie_rule), state(NewBoard, Player)) :-
     pie_rulable(Board),     % check if pie_rule can be applied
     switch_player(Player, SwappedPlayer),       % switch color
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, SwappedPlayer, NewBoard). % place piece as SwappedPlayer
 
 % place and stack move
-move(state(Board, Player), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
+move(state(Board, Player), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, PieceAddedBoard), % board with added piece in PieceAddedBoard
     valid_stack(PieceAddedBoard, Player, StackMove),
