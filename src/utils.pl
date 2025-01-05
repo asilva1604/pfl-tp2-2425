@@ -209,3 +209,14 @@ count_lines_of_two(Board, Player, Count) :-
 count_stacks(Board, Player, Count) :-
     findall(1, (nth1(_, Board, CurrentRow),  nth1(_, CurrentRow, stack(Player))), Stacks),
     length(Stacks, Count).
+
+% remove_pieces(+Pieces, +Board, -NewBoard)
+% Removes pieces from the board.
+% Pieces: The list of pieces to remove.
+% Board: The current board state.
+% NewBoard: The new board state after removing the pieces.
+remove_pieces([], Board, Board).
+remove_pieces([(Row, Col) | Rest], Board, NewBoard) :-
+    replace(Board, Row, Col, empty, TempBoard),
+    remove_pieces(Rest, TempBoard, NewBoard).
+
