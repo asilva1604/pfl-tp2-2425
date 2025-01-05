@@ -379,7 +379,7 @@ valid_moves(state(Board, _, _), Moves) :-
 
 
 valid_moves(state(Board, Player), Moves) :-
-    findall(Move , move(state(Board, Player, _), Move, _), Moves).
+    findall(Move , move(state(Board, Player), Move, _), Moves).
 
 % Ensures the position (Row, Col) is valid (empty and within bounds).
 valid_position(Board, Row, Col) :-
@@ -511,14 +511,15 @@ difficulty_number(2, medium_ai).
 difficulty_number(3, hard_ai).
 
 
-
+display_winner((Player, _, _), WinnerColor) :-
+    write(Player), write(' won as color '), write(WinnerColor), writeln('!!!').
 
 play :-
     get_gamemode(Gamemode),
     initial_state(7, GameState),
     get_settings(Gamemode, MatchState),
     game_loop(MatchState, GameState, Winner),
-    display_winner(Winner).
+    display_winner(MatchState, Winner).
 
 game_loop(_, GameState, Winner) :-
     game_over(GameState, Winner),
