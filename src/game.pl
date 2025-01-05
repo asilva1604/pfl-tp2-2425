@@ -511,6 +511,8 @@ difficulty_number(1, easy_ai).
 difficulty_number(2, medium_ai).
 difficulty_number(3, hard_ai).
 
+display_winner((Player, _, _), draw) :-
+    writeln('Draw! Everybody wins!!! ^_^').
 
 display_winner((Player, _, _), WinnerColor) :-
     write(Player), write(' won as color '), write(WinnerColor), writeln('!!!').
@@ -526,7 +528,8 @@ game_loop(_, GameState, Winner) :-
     game_over(GameState, Winner),
     !.
 
-game_loop((player1, PType1, PType2), GameState, Winner) :- 
+game_loop((player1, PType1, PType2), GameState, Winner) :-
+    repeat,
     display_game((player1, _, _), GameState),
     \+ game_over(GameState, Winner),
     choose_move(GameState, PType1, Move),
@@ -534,6 +537,7 @@ game_loop((player1, PType1, PType2), GameState, Winner) :-
     game_loop((player2, PType1, PType2), NewGameState, Winner).
 
 game_loop((player2, PType1, PType2), GameState, Winner) :- 
+    repeat,
     display_game((player2, _, _), GameState),
     \+ game_over(GameState, Winner),
     choose_move(GameState, PType2, Move),
@@ -654,12 +658,12 @@ no_piece([]).
 value(Board, Player, 999) :-
     game_over(state(Board, Player), Player).
 
-/*
+
 % losing must be worse than win
 value(Board, Player, -999) :-
     switch_player(Player, Opponent),
     game_over(state(Board, Player), Opponent).
-*/
+
 
 % favorable conditions heuristics
 % > any single piece on the board - 0 pts - as both players are always obliged to place one
@@ -693,11 +697,25 @@ choose_move(state(Board, Player), medium_ai, ChosenMove) :-
     random_member(ChosenMove, BestMoves).
 
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
-choose_move(state(Board, Player), hard_ai, BestMove) :-
+choose_move(state(Board, Player), hard_ai, ChosenMove) :-
     valid_moves(state(Board, Player), MyMoves),
     switch_player(Player, Opponent),
-    findall((MyMove, OpMove), NewState^(move(state(Board,Player), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions).
+    findall((MyMove, OpMove), NewState^(move(state(Board,Player), MyMove, NewState), choose_move(NewState, medium_ai, OpMove)), OpPredictions),
+    setof((Value, MyMove1), (member((MyMove1, OpMove1), OpPredictions), value_diff(Board, Player, MyMove1, OpMove1, Value)), ValueMoveMap),
 
+    last(ValueMoveMap, (BestValue, _)),  % last has the highest value since setof sorts elements
+    findall(BestMove, member((BestValue, BestMove), ValueMoveMap), BestMoves),
+    random_member(ChosenMove, BestMoves).
+
+
+value_diff(Board, PlayerColor, MyMove, OpMove, Value) :-
+    move(state(Board, PlayerColor), MyMove, BoardAfterMe),
+    value(BoardAfterMe, PlayerColor, MyValue),
+
+    switch_player(PlayerColor, OpColor),
+    move(state(BoardAfterMe, OpColor), OpMove, OpValue),
+
+    Value is MyValue - OpValue.
 
 ask_place(Position) :-
     writeln('Enter your move row:'),
