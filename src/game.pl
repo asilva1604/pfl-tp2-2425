@@ -654,10 +654,12 @@ no_piece([]).
 value(Board, Player, 999) :-
     game_over(state(Board, Player), Player).
 
+/*
 % losing must be worse than win
 value(Board, Player, -999) :-
     switch_player(Player, Opponent),
     game_over(state(Board, Player), Opponent).
+*/
 
 % favorable conditions heuristics
 % > any single piece on the board - 0 pts - as both players are always obliged to place one
@@ -683,10 +685,12 @@ count_stacks(Board, Player, Count) :-
     length(Stacks, Count).
 
 % medium -> best value achievable in 1 move
-choose_move(state(Board, Player), medium_ai, BestMove) :-
+choose_move(state(Board, Player), medium_ai, ChosenMove) :-
     valid_moves(state(Board, Player), Moves),
     setof((Value, Move), NewState^(move(state(Board, Player), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
-    last(ValueMoveMap, (_, BestMove)).  % last has the highest value since setof sorts elements
+    last(ValueMoveMap, (BestValue, _)),  % last has the highest value since setof sorts elements
+    findall(BestMove, member((BestValue, BestMove), ValueMoveMap), BestMoves),
+    random_member(ChosenMove, BestMoves).
 
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
