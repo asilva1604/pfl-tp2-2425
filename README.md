@@ -106,6 +106,8 @@ The game features a menu-driven system to guide the user through various options
 
 ## Conclusions
 
+Our interpretation of the pie rule is that the second player (black) may choose to swap colours to white. After doing this, he places a white piece. But this rule is open to interpretation, and another interpretation could be that after choosing to swap colour, he skips this turn.
+
 This project still has some rough edges, and is not completely error-ridden. Some of the known bugs are:
 
 In the future, a better algorithm could be implemented for a higher level of AI (min-max), and alternative rules could also be implemented.
