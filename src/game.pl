@@ -81,6 +81,8 @@ state(Board, Player, Mode):
 move(state(Board, Player, Mode), ((Row, Col), no_stack, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, NewBoard), % board with added piece in NewBoard
+    findall(1, valid_stack(NewBoard, Player, _), StacksFound),
+    length(StacksFound, 0),         % ensure there are no stacks
     switch_player(Player, NextPlayer).
 
 % apply pie rule and place move
@@ -103,6 +105,7 @@ build_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col)), NewBo
     replace(TempBoard1, R1Row, R1Col, empty, TempBoard2),
     replace(TempBoard2, R2Row, R2Col, empty, NewBoard).
 
+/*
 valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     % Ensure the chosen piece is part of a line of three.
     line_of_three(Board, Player, SRow, SCol, Line),
@@ -115,15 +118,33 @@ valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     (SRow, SCol) \= (R1Row, R1Col),
     (SRow, SCol) \= (R2Row, R2Col),
     (R1Row, R1Col) \= (R2Row, R2Col).
-/*
+*/
+
 valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
     % check if all positions are occupied by single pieces of Player color
-    place_in_pos(Board, Player, (SRow, SCol)),
-    place_in_pos(Board, Player, (R1Row, R1Col)),
-    place_in_pos(Board, Player, (R2Row, R2Col)),
+    piece_in_pos(Board, Player, (SRow, SCol)),
+    piece_in_pos(Board, Player, (R1Row, R1Col)),
+    piece_in_pos(Board, Player, (R2Row, R2Col)),
 
     % check if positions are in a line
-*/  
+    continuous_line((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col)).
+
+
+% helper predicate to check if three positions form a continuous line
+continuous_line((X1, Y1), (X2, Y2), (X3, Y3)) :-
+    % Sort the positions to ensure proper order for continuity check
+    sort([(X1, Y1), (X2, Y2), (X3, Y3)], [(A1, B1), (A2, B2), (A3, B3)]),
+    % Check alignment (horizontal, vertical, diagonal) and continuity
+    (
+        % Horizontal line
+        A1 = A2, A2 = A3, B2 - B1 =:= 1, B3 - B2 =:= 1;
+        % Vertical line
+        B1 = B2, B2 = B3, A2 - A1 =:= 1, A3 - A2 =:= 1;
+        % Diagonal line (top-left to bottom-right)
+        A2 - A1 =:= 1, B2 - B1 =:= 1, A3 - A2 =:= 1, B3 - B2 =:= 1;
+        % Diagonal line (top-right to bottom-left)
+        A2 - A1 =:= 1, B1 - B2 =:= 1, A3 - A2 =:= 1, B2 - B3 =:= 1
+    ).
 
 
 
@@ -511,7 +532,7 @@ play(state(Board, Player, Mode), 2, human, 1) :-
 play(state(Board, Player, Mode), 2, ai, 1) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), easy_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
     play(state(Board1, Player1, Mode), 2, human, 1).
 
 play(state(Board, Player, Mode), 2, human, 1) :-
@@ -523,7 +544,7 @@ play(state(Board, Player, Mode), 2, human, 1) :-
 play(state(Board, Player, Mode), 2, ai, 1) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), easy_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
     play(state(Board1, Player1, Mode), 2, human, 1).
 
 play(state(Board, Player, Mode), 2, human, 2) :-
@@ -535,7 +556,7 @@ play(state(Board, Player, Mode), 2, human, 2) :-
 play(state(Board, Player, Mode), 2, ai, 2) :-
     display_game(state(Board, Player, Mode)),
     choose_move(state(Board, Player, Mode), medium_ai, Move),
-    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1), ai),
+    move(state(Board, Player, 4), Move, state(Board1, Player1, Mode1)),
     display_game(state(Board1, Player1, Mode1)),
     play(state(Board1, Player1, Mode), 2, human, 2).
 
@@ -555,13 +576,13 @@ play(state(Board, Player, 4)) :-
 play(State, 4, ai1, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState, ai),
+    move(State, Move, NewState),
     play(NewState, 4, ai2, 1).
 
 play(State, 4, ai2, 1) :-
     display_game(State),
     choose_move(State, easy_ai, Move),
-    move(State, Move, NewState, ai),
+    move(State, Move, NewState),
     play(NewState, 4, ai1, 1).
 
 pie_rulable(Board) :- one_piece(Board).
