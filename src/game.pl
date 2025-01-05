@@ -96,7 +96,7 @@ move(state(Board, Player, Mode), ((Row, Col), no_stack, pie_rule), state(NewBoar
 move(state(Board, Player, Mode), ((Row, Col), StackMove, no_pie_rule), state(NewBoard, NextPlayer, Mode)) :-
     valid_position(Board, Row, Col),  % check if position is inside board and empty
     replace(Board, Row, Col, Player, PieceAddedBoard), % board with added piece in PieceAddedBoard
-    valid_stack(Board, Player, StackMove),
+    valid_stack(PieceAddedBoard, Player, StackMove),
     build_stack(PieceAddedBoard, Player, StackMove, NewBoard),
     switch_player(Player, NextPlayer).
 
@@ -132,17 +132,17 @@ valid_stack(Board, Player, ((SRow, SCol), (R1Row, R1Col), (R2Row, R2Col))) :-
 
 % helper predicate to check if three positions form a continuous line
 continuous_line((X1, Y1), (X2, Y2), (X3, Y3)) :-
-    % Sort the positions to ensure proper order for continuity check
+    % sort the positions to help with the continuity check
     sort([(X1, Y1), (X2, Y2), (X3, Y3)], [(A1, B1), (A2, B2), (A3, B3)]),
-    % Check alignment (horizontal, vertical, diagonal) and continuity
+    % check alignment and continuity
     (
-        % Horizontal line
+        % horizontal line
         A1 = A2, A2 = A3, B2 - B1 =:= 1, B3 - B2 =:= 1;
-        % Vertical line
+        % vertical line
         B1 = B2, B2 = B3, A2 - A1 =:= 1, A3 - A2 =:= 1;
-        % Diagonal line (top-left to bottom-right)
+        % diagonal line (top-left to bottom-right)
         A2 - A1 =:= 1, B2 - B1 =:= 1, A3 - A2 =:= 1, B3 - B2 =:= 1;
-        % Diagonal line (top-right to bottom-left)
+        % diagonal line (top-right to bottom-left)
         A2 - A1 =:= 1, B1 - B2 =:= 1, A3 - A2 =:= 1, B2 - B3 =:= 1
     ).
 
@@ -635,7 +635,7 @@ count_stacks(Board, Player, Count) :-
 choose_move(state(Board, Player, Mode), medium_ai, BestMove) :-
     valid_moves(state(Board, Player, Mode), Moves),
     setof((Value, Move), NewState^(move(state(Board, Player, Mode), Move, NewState), value(NewState, Player, Value)), ValueMoveMap),
-    last(ValueMoveMap, (_, BestMove)).
+    last(ValueMoveMap, (_, BestMove)).  % last has the highest value since setof sorts elements
 
 % hard -> best value achievable in 2 moves, while trying to predict opponent's next move (minimax)
 choose_move(state(Board, Player), hard_ai, BestMove) :-
